@@ -27,12 +27,17 @@ export default function TopTabs() {
 
   const tabs = [
     { name: "DASHBOARD", path: "/dashboard", permission: "view_dashboard" },
-    { name: "REQUEST", path: "/appointment", permission: "approve_request" },
+    { name: "REQUEST", path: "/pending", permission: "approve_request" },
     { name: "APPOINTMENTS", path: "/view", permission: "view_appointment" },
-    { name: "INTEGRITY", path: "/integrity", permission: "manage_integrity" },
-    { name: "PENDING", path: "/pending", permission: "approve_request" },
     { name: "CREATE ACCOUNT", path: "/signup", permission: "manage_roles" },
     { name: "MANAGE", path: "/roles", permission: "manage_roles" },
+    { name: "CHECK IN", path: "/checkin", permission: "check_in" },
+    { name: "CHECK OUT", path: "/security", permission: "check_out" },
+    {
+      name: "CREATE APPOINTMENT",
+      path: "/create",
+      permission: "create_appointment",
+    },
   ];
 
   const accessibleTabs = tabs.filter((tab) =>
@@ -57,16 +62,6 @@ export default function TopTabs() {
           </Link>
         ))}
       </div>
-
-      {/* Optional Plus Button for Create Account */}
-      {activeTab === "/signup" && (
-        <div className="flex justify-start mb-4">
-          <button className="flex items-center px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg">
-            <PlusIcon />
-            Create Account
-          </button>
-        </div>
-      )}
 
       {/* Dynamic Content */}
       <div>{/* Render your tab contents here */}</div>

@@ -1,9 +1,99 @@
 import React, { useState } from "react";
-import { FaClock } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-export default function CreateAppointment() {
+const hours = Array.from({ length: 12 }, (_, i) =>
+  String(i + 1).padStart(2, "0"),
+);
+const minutes = Array.from({ length: 12 }, (_, i) =>
+  String(i * 5).padStart(2, "0"),
+);
+
+function to24HourString(hour12, minute, period) {
+  let h = parseInt(hour12, 10);
+  if (period === "AM") {
+    if (h === 12) h = 0;
+  } else {
+    if (h !== 12) h += 12;
+  }
+  return `${String(h).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function toMinutesSinceMidnight(hour24Str, minuteStr) {
+  const h = parseInt(hour24Str, 10);
+  const m = parseInt(minuteStr, 10);
+  return h * 60 + m;
+}
+
+// Reusable input component
+const FormInput = ({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  required = true,
+}) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+    />
+  </div>
+);
+
+// Time group for start/end
+const TimeSelectGroup = ({ formData, handleChange, namePrefix }) => (
+  <div className="flex items-center">
+    <select
+      name={`${namePrefix}Hour`}
+      value={formData[`${namePrefix}Hour`]}
+      onChange={handleChange}
+      className="w-1/3 border border-gray-300 rounded-l-lg px-1 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+      {hours.map((h) => (
+        <option key={h} value={h}>
+          {h}
+        </option>
+      ))}
+    </select>
+
+    <span className="text-gray-500 font-semibold px-1">:</span>
+
+    <select
+      name={`${namePrefix}Minute`}
+      value={formData[`${namePrefix}Minute`]}
+      onChange={handleChange}
+      className="w-1/3 border border-gray-300 -ml-px px-1 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+      {minutes.map((m) => (
+        <option key={m} value={m}>
+          {m}
+        </option>
+      ))}
+    </select>
+
+    <select
+      name={`${namePrefix}Period`}
+      value={formData[`${namePrefix}Period`]}
+      onChange={handleChange}
+      className="w-1/3 border border-gray-300 rounded-r-lg -ml-px px-2 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500 outline-none">
+      <option>AM</option>
+      <option>PM</option>
+    </select>
+  </div>
+);
+
+export default function AppointmentForm() {
   const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
     email: "",
     phone: "",
@@ -13,297 +103,304 @@ export default function CreateAppointment() {
     organization: "",
     occupation: "",
     date: "",
-    startHour: "12",
+    startHour: "09",
     startMinute: "00",
     startPeriod: "AM",
-    endHour: "12",
+    endHour: "10",
     endMinute: "00",
     endPeriod: "AM",
+    plateNumber: "",
     purpose: "",
   });
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (
-      !formData.firstName ||
-      !formData.lastName ||
-      !formData.date ||
-      !formData.purpose
-    ) {
-      alert("Please fill in all required fields.");
+    const start24 = to24HourString(
+      formData.startHour,
+      formData.startMinute,
+      formData.startPeriod,
+    );
+    const end24 = to24HourString(
+      formData.endHour,
+      formData.endMinute,
+      formData.endPeriod,
+    );
+
+    const [sH, sM] = start24.split(":");
+    const [eH, eM] = end24.split(":");
+    if (toMinutesSinceMidnight(sH, sM) >= toMinutesSinceMidnight(eH, eM)) {
+      alert("End time must be after start time.");
       return;
     }
 
-    console.log("Appointment Created:", formData);
+    const payload = {
+      firstName: formData.firstName,
+      middleName: formData.middleName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      gender: formData.gender,
+      plateNum: formData.plateNumber,
+      country: formData.country,
+      city: formData.city,
+      organization: formData.organization,
+      occupation: formData.occupation,
+      appointmentDate: formData.date,
+      timeFrom: start24,
+      timeTo: end24,
+      purpose: formData.purpose,
+    };
+
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:3000/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 👈 attach token
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errData = await res.text();
+        throw new Error(errData || "Failed to create appointment");
+      }
+
+      const data = await res.json();
+      navigate("/appointment");
+      console.log("Server response:", data);
+
+      setFormData({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        gender: "",
+        country: "",
+        city: "",
+        organization: "",
+        occupation: "",
+        date: "",
+        startHour: "09",
+        startMinute: "00",
+        startPeriod: "AM",
+        endHour: "10",
+        endMinute: "00",
+        endPeriod: "AM",
+        plateNumber: "",
+        purpose: "",
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setMessage("❌ Failed to create appointment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-200 flex items-center justify-center p-6">
-      <div className="bg-white w-full max-w-2xl p-8 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 ">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
           Create New Appointment
         </h2>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* First & Last Name */}
-            <div>
-              <label className="block text-gray-700 mb-1">First Name *</label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1">Last Name *</label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-                required
-              />
-            </div>
+        {message && (
+          <div
+            className={`text-sm mb-4 px-3 py-2 rounded ${
+              message.startsWith("✅")
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Row 1: First, Middle, Last Name */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <FormInput
+              label="First Name"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+            />
+            <FormInput
+              label="Middle Name"
+              name="middleName"
+              value={formData.middleName}
+              onChange={handleChange}
+              required={false}
+            />
+            <FormInput
+              label="Last Name"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Email & Phone */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1">Phone No</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-                placeholder="+251..."
-              />
-            </div>
+          {/* Row 2 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+            <FormInput
+              label="Phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Gender */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-gray-700 mb-1">Gender:</label>
-              <div className="flex items-center">
-                <label className="flex items-center mr-4">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="Female"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Female
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="Male"
-                    onChange={handleChange}
-                    className="mr-2"
-                  />
-                  Male
-                </label>
+          {/* Gender & Plate */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Gender <span className="text-red-500">*</span>
+              </label>
+              <div className="flex space-x-4">
+                {["Female", "Male"].map((g) => (
+                  <label
+                    key={g}
+                    className="flex items-center text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value={g}
+                      checked={formData.gender === g}
+                      onChange={handleChange}
+                      required
+                      className="text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2"
+                    />
+                    {g}
+                  </label>
+                ))}
               </div>
             </div>
+
+            <FormInput
+              label="Plate Number"
+              name="plateNumber"
+              value={formData.plateNumber}
+              onChange={handleChange}
+              required={false}
+            />
           </div>
 
           {/* Country & City */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 mb-1">Country</label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="">Select Country</option>
-                <option value="Ethiopia">Ethiopia</option>
-                <option value="Kenya">Kenya</option>
-                <option value="USA">USA</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1">City</label>
-              <select
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="">Select City</option>
-                <option value="Addis Ababa">Addis Ababa</option>
-                <option value="Nairobi">Nairobi</option>
-                <option value="Washington">Washington</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Country"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+            />
+            <FormInput
+              label="City"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+            />
           </div>
 
-          {/* Organization & Occupation */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-gray-700 mb-1">Organization</label>
-              <input
-                type="text"
-                name="organization"
-                value={formData.organization}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1">Occupation</label>
-              <input
-                type="text"
-                name="occupation"
-                value={formData.occupation}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-            </div>
+          {/* Organization & Occupation (occupation is required now) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput
+              label="Organization"
+              name="organization"
+              value={formData.organization}
+              onChange={handleChange}
+              required={false}
+            />
+            <FormInput
+              label="Occupation"
+              name="occupation"
+              value={formData.occupation}
+              onChange={handleChange}
+              required={true}
+            />
           </div>
 
-          {/* Date & Time in a single line */}
-          <div className="flex justify-between gap-4">
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Date *</label>
+          {/* Date & Time */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date <span className="text-red-500">*</span>
+              </label>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Time *</label>
-              <div className="flex items-center">
-                <div className="flex items-center border rounded-lg px-2 py-1 mr-2">
-                  <FaClock className="text-gray-500 mr-2" />
-                  <select
-                    name="startHour"
-                    value={formData.startHour}
-                    onChange={handleChange}
-                    className="flex-1 bg-transparent outline-none"
-                  >
-                    {[...Array(12).keys()].map((hour) => (
-                      <option key={hour + 1} value={hour + 1}>
-                        {hour + 1}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="mx-1">:</span>
-                  <select
-                    name="startMinute"
-                    value={formData.startMinute}
-                    onChange={handleChange}
-                    className="flex-1 bg-transparent outline-none"
-                  >
-                    {[0, 15, 30, 45].map((minute) => (
-                      <option key={minute} value={minute}>
-                        {minute < 10 ? `0${minute}` : minute}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="startPeriod"
-                    value={formData.startPeriod}
-                    onChange={handleChange}
-                    className="bg-transparent outline-none text-gray-600 ml-2"
-                  >
-                    <option>AM</option>
-                    <option>PM</option>
-                  </select>
-                </div>
-                <span className="self-center">To</span>
-                <div className="flex items-center border rounded-lg px-2 py-1 ml-2">
-                  <FaClock className="text-gray-500 mr-2" />
-                  <select
-                    name="endHour"
-                    value={formData.endHour}
-                    onChange={handleChange}
-                    className="flex-1 bg-transparent outline-none"
-                  >
-                    {[...Array(12).keys()].map((hour) => (
-                      <option key={hour + 1} value={hour + 1}>
-                        {hour + 1}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="mx-1">:</span>
-                  <select
-                    name="endMinute"
-                    value={formData.endMinute}
-                    onChange={handleChange}
-                    className="flex-1 bg-transparent outline-none"
-                  >
-                    {[0, 15, 30, 45].map((minute) => (
-                      <option key={minute} value={minute}>
-                        {minute < 10 ? `0${minute}` : minute}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="endPeriod"
-                    value={formData.endPeriod}
-                    onChange={handleChange}
-                    className="bg-transparent outline-none text-gray-600 ml-2"
-                  >
-                    <option>AM</option>
-                    <option>PM</option>
-                  </select>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Time
+              </label>
+              <div className="flex items-center space-x-2">
+                <TimeSelectGroup
+                  formData={formData}
+                  handleChange={handleChange}
+                  namePrefix="start"
+                />
+                <span className="text-gray-500 text-sm">to</span>
+                <TimeSelectGroup
+                  formData={formData}
+                  handleChange={handleChange}
+                  namePrefix="end"
+                />
               </div>
             </div>
           </div>
 
           {/* Purpose */}
           <div>
-            <label className="block text-gray-700 mb-1">Purpose *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Purpose <span className="text-red-500">*</span>
+            </label>
             <textarea
               name="purpose"
               value={formData.purpose}
               onChange={handleChange}
-              className="w-full border rounded-lg px-3 py-2 h-24"
+              rows={3}
               required
-            ></textarea>
+              placeholder="Briefly describe the purpose of the appointment..."
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 resize-none"
+            />
           </div>
 
           {/* Submit */}
-          <div className="mt-6">
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            >
-              Create Appointment
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-70">
+            {loading ? "Creating..." : "Create Appointment"}
+          </button>
         </form>
       </div>
     </div>

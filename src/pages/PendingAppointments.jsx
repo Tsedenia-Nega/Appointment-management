@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Eye,
   X,
@@ -12,428 +12,1041 @@ import {
   Slash,
   RotateCcw,
   ShieldCheck,
+  Clock,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  AlertTriangle,
+  Info,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
-// Mock data
-const MOCK_APPOINTMENTS = [
-  {
-    id: 1,
-    firstName: "Christine",
-    middleName: "Abeba",
-    lastName: "Brooks",
-    email: "Lidu@gmail.com",
-    date: "04 Sep 2025",
-    status: "Pending",
-    phone: "0912345676",
-    country: "Ethiopia",
-    organization: "University",
-    occupation: "Student",
-    time: "04:20 PM - 06:00 PM",
-    purpose:
-      "To conduct a research interview on local market trends for a university project.",
-  },
-  {
-    id: 2,
-    firstName: "Michael",
-    middleName: "T.",
-    lastName: "Jones",
-    email: "mike@corp.com",
-    date: "05 Sep 2025",
-    status: "Pending",
-    phone: "0923456789",
-    country: "United States",
-    organization: "Tech Corp",
-    occupation: "Manager",
-    time: "10:00 AM - 11:00 AM",
-    purpose:
-      "VIP meeting with CEO regarding potential partnership and investment.",
-  },
-];
+// Base URL and token
+const BASE_URL = "http://localhost:3000";
+const ACCESS_TOKEN_KEY = "token";
 
+// Allowed materials options (fixed, default list)
 const allowedOptions = [
-  "All",
-  "Computer",
+  "Laptop",
+  "Phone",
   "PC",
-  "Mobile",
   "Document",
   "USB Drive",
   "Camera",
 ];
 
-// Helper component for cleaner detail presentation
+// --- 1. Toast Notification Component (Replaces alert/confirm) ---
+
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [message, onClose]);
+  if (!message) return null;
+
+  const getIcon = (type) => {
+    switch (type) {
+      case "success":
+        return <Check size={20} className="text-green-500" />;
+      case "error":
+        return <AlertTriangle size={20} className="text-red-500" />;
+      case "info":
+      default:
+        return <Info size={20} className="text-blue-500" />;
+    }
+  };
+
+  const getColorClass = (type) => {
+    switch (type) {
+      case "success":
+        return "bg-green-100 border-green-400";
+      case "error":
+        return "bg-red-100 border-red-400";
+      case "info":
+      default:
+        return "bg-blue-100 border-blue-400";
+    }
+  };
+
+  return (
+    <div
+      className={`fixed top-4 right-4 z-[100] p-4 pr-10 rounded-lg shadow-lg border-l-4 transition-all duration-300 ${getColorClass(
+        type,
+      )}`}
+      style={{
+        transform: message ? "translateX(0)" : "translateX(120%)",
+        opacity: message ? 1 : 0,
+      }}>
+      <div className="flex items-center space-x-3">
+        {getIcon(type)}
+        <p className="text-sm font-medium text-gray-800">{message}</p>
+      </div>
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+        <X size={16} />
+      </button>
+    </div>
+  );
+};
+
+// --- 2. Helper component for detail display ---
+
 const DetailItem = ({ icon: Icon, label, value }) => (
   <div className="flex items-start space-x-2 text-gray-700">
-    <Icon size={18} className="text-blue-500 mt-1 flex-shrink-0" />
+    <Icon size={16} className="text-blue-500 mt-1 flex-shrink-0" />
     <div className="flex flex-col">
       <p className="text-xs font-medium text-gray-500 uppercase">{label}</p>
-      <p className="text-sm font-semibold text-gray-800">{value}</p>
+      <p className="text-sm font-semibold text-gray-800 break-words">
+        {value || "-"}
+      </p>
     </div>
   </div>
 );
 
-//---------------------------------------------------------
+// --- 3. Reassign Modal (omitted for brevity, assume content is stable) ---
 
-export default function PendingAppointmentsPage() {
-  const [appointments, setAppointments] = useState([]);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [allowedMaterialSelection, setAllowedMaterialSelection] = useState([]);
-  // 🆕 Renamed state for Security Check Requirement
-  const [securityCheckRequired, setSecurityCheckRequired] = useState(null);
+const ReassignModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
+  allowedOptions,
+}) => {
+  const [reassignedDate, setReassignedDate] = useState("");
+  const [reassignedTimeFrom, setReassignedTimeFrom] = useState("");
+  const [reassignedTimeTo, setReassignedTimeTo] = useState("");
+  const [allowedMaterials, setAllowedMaterials] = useState([]);
+  const [inspectionRequiredStatus, setInspectionRequiredStatus] =
+    useState("Not Required");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // ⚠️ In a real app, fetch pending appointments from backend
-    const pending = MOCK_APPOINTMENTS.filter((a) => a.status === "Pending");
-    setAppointments(pending);
-  }, []);
+    if (isOpen && initialData) {
+      const date =
+        initialData.reassignedDate || initialData.appointmentDate || "";
+      const timeFrom =
+        initialData.reassignedTimeFrom || initialData.timeFrom || "";
+      const timeTo = initialData.reassignedTimeTo || initialData.timeTo || "";
 
-  // Initialize states when a new appointment is opened
-  useEffect(() => {
-    if (selectedAppointment) {
-      setAllowedMaterialSelection([]);
-      // 🆕 Reset security status to null
-      setSecurityCheckRequired(null);
+      setReassignedDate(date);
+      setReassignedTimeFrom(timeFrom);
+      setReassignedTimeTo(timeTo);
+      // For reassign, reset materials/inspection to allow fresh configuration
+      setAllowedMaterials([]);
+      setInspectionRequiredStatus("Not Required");
     }
-  }, [selectedAppointment]);
+  }, [isOpen, initialData]);
 
-  const handleCloseDrawer = () => {
-    setSelectedAppointment(null);
-  };
-
-  const handleOpenDrawer = (appt) => {
-    setSelectedAppointment(appt);
-  };
-
-  // --- ACTION HANDLERS ---
-
-  const handleApprove = () => {
-    if (!selectedAppointment) return;
-
-    // ⚠️ API CALL: Send the approval status, approved materials, and security requirement status
-
-    console.log(`Approving ID: ${selectedAppointment.id}`);
-    console.log(
-      `- Approved Materials: ${allowedMaterialSelection.join(", ") || "None"}`
-    );
-    console.log(
-      `- Security Check Required: ${securityCheckRequired || "Not Specified"}`
-    );
-
-    // Simulate removal from pending view
-    setAppointments((prev) =>
-      prev.filter((a) => a.id !== selectedAppointment.id)
-    );
-    handleCloseDrawer();
-  };
-
-  const handleReject = () => {
-    if (!selectedAppointment) return;
-
-    // ⚠️ API CALL: Send the rejection status and security requirement status
-
-    console.log(`Rejecting ID: ${selectedAppointment.id}`);
-    console.log(
-      `- Security Check Required: ${securityCheckRequired || "Not Specified"}`
-    );
-
-    // Simulate removal from pending view
-    setAppointments((prev) =>
-      prev.filter((a) => a.id !== selectedAppointment.id)
-    );
-    handleCloseDrawer();
-  };
-
-  // Handler for material selection changes (checkboxes)
   const handleMaterialChange = (e) => {
     const material = e.target.value;
     const isChecked = e.target.checked;
-
-    setAllowedMaterialSelection((prev) => {
-      if (isChecked) {
-        return [...prev, material];
-      } else {
-        return prev.filter((m) => m !== material);
-      }
-    });
+    setAllowedMaterials((prev) =>
+      isChecked ? [...prev, material] : prev.filter((m) => m !== material),
+    );
   };
 
-  // 🆕 Handler for security radio buttons (Required/Not Required)
-  const handleSecurityChange = (e) => {
-    setSecurityCheckRequired(e.target.value);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!reassignedDate || !reassignedTimeFrom || !reassignedTimeTo) {
+      console.error("Please fill in the New Date and Time slot.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const inspectionRequired = inspectionRequiredStatus === "Required";
+      await onSubmit({
+        reassignedDate,
+        reassignedTimeFrom,
+        reassignedTimeTo,
+        allowedMaterials,
+        inspectionRequired,
+      });
+      onClose();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center transition-opacity"
+      onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6"
+        onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <RotateCcw className="w-5 h-5 mr-2 text-yellow-600" /> Reassign
+            Appointment
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="date"
+                className="block text-sm font-medium text-gray-700 mb-1">
+                New Date *
+              </label>
+              <input
+                type="date"
+                id="date"
+                value={reassignedDate}
+                onChange={(e) => setReassignedDate(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                required
+              />
+            </div>
+            <div className="flex space-x-2">
+              <div className="flex-1">
+                <label
+                  htmlFor="timeFrom"
+                  className="block text-sm font-medium text-gray-700 mb-1">
+                  Time From *
+                </label>
+                <input
+                  type="time"
+                  id="timeFrom"
+                  value={reassignedTimeFrom}
+                  onChange={(e) => setReassignedTimeFrom(e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  required
+                />
+              </div>
+              <div className="flex-1">
+                <label
+                  htmlFor="timeTo"
+                  className="block text-sm font-medium text-gray-700 mb-1">
+                  Time To *
+                </label>
+                <input
+                  type="time"
+                  id="timeTo"
+                  value={reassignedTimeTo}
+                  onChange={(e) => setReassignedTimeTo(e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Allowed Materials (Optional)
+            </label>
+            <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              {allowedOptions.map((opt) => (
+                <div key={opt} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id={`modal-material-${opt}`}
+                    value={opt}
+                    checked={allowedMaterials.includes(opt)}
+                    onChange={handleMaterialChange}
+                    className="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                  />
+                  <label
+                    htmlFor={`modal-material-${opt}`}
+                    className="text-sm text-gray-700 select-none">
+                    {opt}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Security Inspection Required *
+            </label>
+            <div className="flex space-x-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              {["Required", "Not Required"].map((status) => (
+                <div key={status} className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id={`modal-security-${status}`}
+                    name="modal-security-check-required"
+                    value={status}
+                    checked={inspectionRequiredStatus === status}
+                    onChange={(e) =>
+                      setInspectionRequiredStatus(e.target.value)
+                    }
+                    className="h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                    required
+                  />
+                  <label
+                    htmlFor={`modal-security-${status}`}
+                    className="text-sm text-gray-700 select-none">
+                    {status}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
+              disabled={isLoading}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition shadow-md disabled:opacity-50"
+              disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="mr-2 animate-spin" />{" "}
+                  Reassigning...
+                </>
+              ) : (
+                <>
+                  <RotateCcw size={16} className="mr-2" /> Reassign
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- 4. Rejection Prompt Modal (omitted for brevity, assume content is stable) ---
+
+const RejectionPromptModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (isOpen) {
+      setReason("");
+    }
+  }, [isOpen]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // Replacing alert with console.error as per instructions
+    if (reason.trim() === "") {
+      console.error("Rejection reason cannot be empty.");
+      return;
+    }
+    onSubmit(reason);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center transition-opacity"
+      onClick={onClose}>
+      <div
+        className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6"
+        onClick={(e) => e.stopPropagation()}>
+        <div className="flex justify-between items-center border-b pb-3 mb-4">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <Slash className="w-5 h-5 mr-2 text-red-600" /> Confirm Rejection
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Please provide a brief reason for rejecting this appointment.
+          </p>
+          <div>
+            <textarea
+              id="rejection-reason"
+              rows="3"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-red-500 focus:border-red-500 text-sm"
+              placeholder="e.g., Conflicting schedule, security risk, missing documents..."
+              required
+            />
+          </div>
+          <div className="pt-2 flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
+              disabled={isLoading}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-md disabled:opacity-50"
+              disabled={isLoading || reason.trim() === ""}>
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="mr-2 animate-spin" />{" "}
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <Slash size={16} className="mr-2" /> Reject Appointment
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// --- 5. Pending Appointments Page (Main Component) ---
+
+export default function PendingAppointmentsPage() {
+  const [appointments, setAppointments] = useState([]);
+  const [expandedId, setExpandedId] = useState(null);
+
+  // State to hold dynamic configuration for approval/rejection (materials/inspection)
+  const [approvalConfigs, setApprovalConfigs] = useState({});
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+
+  // State for rejection modal
+  const [isRejectPromptOpen, setIsRejectPromptOpen] = useState(false);
+  const [currentApptToRejectId, setCurrentApptToRejectId] = useState(null);
+
+  const [actionLoading, setActionLoading] = useState(null); // Tracks ID of appointment being acted upon
+  const [isListLoading, setIsListLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [toast, setToast] = useState({ message: "", type: "info" });
+
+  const token = useMemo(() => localStorage.getItem(ACCESS_TOKEN_KEY), []);
+  const selectedAppointment = appointments.find(
+    (appt) => appt.id === expandedId,
+  );
+
+  // Helper to update the approval configuration for a specific appointment ID
+  const updateApprovalConfig = useCallback((id, key, value) => {
+    setApprovalConfigs((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || { materials: [], inspection: "Not Required" }),
+        [key]: value,
+      },
+    }));
+  }, []);
+
+  const showToast = (message, type) => setToast({ message, type });
+
+  // Fetch pending appointments
+  const fetchAppointments = useCallback(async () => {
+    if (!token) {
+      setFetchError("Authentication token not found.");
+      setIsListLoading(false);
+      return;
+    }
+
+    setIsListLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetch(`${BASE_URL}/requests/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        let errorMessage = `Failed to fetch pending requests: ${res.status}`;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorMessage;
+        } catch {
+          // response was not JSON, use default error message
+        }
+        throw new Error(errorMessage);
+      }
+      const data = await res.json();
+      setAppointments(data);
+    } catch (err) {
+      console.error(err);
+      setFetchError(
+        err.message ||
+          "An unexpected error occurred while fetching appointments.",
+      );
+      showToast("Failed to load appointments.", "error");
+    } finally {
+      setIsListLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  const handleToggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
+    // Initialize config if opening a new row
+    if (expandedId !== id) {
+      if (!approvalConfigs[id]) {
+        updateApprovalConfig(id, "materials", []);
+        updateApprovalConfig(id, "inspection", "Not Required");
+      }
+    }
+  };
+
+  const handleApprove = async (appt) => {
+    if (actionLoading) return;
+
+    // Check if configuration is available (should be initialized on expand)
+    const config = approvalConfigs[appt.id] || {
+      materials: [],
+      inspection: "Not Required",
+    };
+
+    if (config.materials.length === 0 && config.inspection === "Not Required") {
+      showToast(
+        "Please configure allowed materials and inspection status before approving.",
+        "info",
+      );
+      return;
+    }
+
+    // Custom confirmation UI logic (using native confirm as it's the expected interaction pattern for this environment)
+    if (
+      !window.confirm(
+        `Are you sure you want to APPROVE this appointment with the selected settings?`,
+      )
+    )
+      return;
+
+    setActionLoading(appt.id);
+
+    const approvalPayload = {
+      allowedMaterials: config.materials,
+      inspectionRequired: config.inspection === "Required",
+    };
+
+    // --- CRITICAL DEBUGGING LOG ---
+    console.log("--- APPROVAL PAYLOAD START ---");
+    console.log(`Sending payload for Appointment ID: ${appt.id}`);
+    console.log("Allowed Materials:", approvalPayload.allowedMaterials);
+    console.log("Inspection Required:", approvalPayload.inspectionRequired);
+    console.log("--- APPROVAL PAYLOAD END ---");
+    // ----------------------------
+
+    try {
+      const res = await fetch(`${BASE_URL}/approvals/${appt.id}/approve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(approvalPayload),
+      });
+      if (!res.ok) throw new Error("Failed to approve appointment.");
+
+      showToast("Appointment approved successfully!", "success");
+      fetchAppointments();
+      setExpandedId(null);
+    } catch (err) {
+      console.error("Approval error:", err);
+      showToast(
+        `Error approving appointment: ${err.message || "Check console."}`,
+        "error",
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Function called by the RejectionPromptModal
+  const handleReject = async (apptId, reason) => {
+    if (actionLoading || !reason) return;
+
+    setActionLoading(apptId);
+    setIsRejectPromptOpen(false);
+    setCurrentApptToRejectId(null);
+
+    try {
+      const res = await fetch(`${BASE_URL}/approvals/${apptId}/reject`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+      if (!res.ok) {
+        const errorBody = await res.json();
+        const errorMessage = errorBody.message
+          ? errorBody.message.join(", ")
+          : "Failed to reject appointment";
+        throw new Error(errorMessage);
+      }
+
+      // showToast("Appointment rejected successfully!", "success");
+      fetchAppointments();
+      setExpandedId(null);
+    } catch (err) {
+      console.error("Rejection error:", err);
+      showToast(
+        `Error rejecting appointment: ${err.message || "Check console."}`,
+        "error",
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReassignSubmit = async (reassignData) => {
+    if (!selectedAppointment) return;
+    setActionLoading(selectedAppointment.id);
+
+    // Custom confirmation
+    if (
+      !window.confirm(
+        `Confirm reassigning appointment to ${reassignData.reassignedDate}?`,
+      )
+    ) {
+      setActionLoading(null);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${BASE_URL}/approvals/${selectedAppointment.id}/reassign`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(reassignData),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to reassign appointment.");
+
+      showToast("Appointment reassigned successfully!", "success");
+      fetchAppointments();
+      setIsReassignModalOpen(false);
+      setExpandedId(null);
+    } catch (err) {
+      console.error("Reassign error:", err);
+      showToast(
+        `Error reassigning appointment: ${err.message || "Check console."}`,
+        "error",
+      );
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Helper to open the rejection prompt modal
+  const openRejectPrompt = (apptId) => {
+    setCurrentApptToRejectId(apptId);
+    setIsRejectPromptOpen(true);
+  };
+
+  // Component for the expanded detail view within the table
+  const ExpandedRow = ({ appt }) => {
+    const config = approvalConfigs[appt.id] || {
+      materials: [],
+      inspection: "Not Required",
+    };
+    // New state for custom material input
+    const [customMaterialText, setCustomMaterialText] = useState("");
+
+    const handleMaterialChange = (e) => {
+      const material = e.target.value;
+      const isChecked = e.target.checked;
+      const newMaterials = isChecked
+        ? [...config.materials, material]
+        : config.materials.filter((m) => m !== material);
+      updateApprovalConfig(appt.id, "materials", newMaterials);
+    };
+
+    const handleRemoveCustomMaterial = (materialToRemove) => {
+      const newMaterials = config.materials.filter(
+        (m) => m !== materialToRemove,
+      );
+      updateApprovalConfig(appt.id, "materials", newMaterials);
+      // showToast(`Removed custom material: ${materialToRemove}`, "info");
+    };
+
+    const handleAddCustomMaterial = (e) => {
+      e.preventDefault();
+      const material = customMaterialText.trim();
+      if (!material) {
+        showToast("Please enter a material name.", "info");
+        return;
+      }
+
+      const normalizedMaterial = material.toLowerCase();
+
+      // Check if material is already included (case-insensitive check against current list)
+      if (
+        config.materials
+          .map((m) => m.toLowerCase())
+          .includes(normalizedMaterial)
+      ) {
+        showToast(`"${material}" is already listed.`, "info");
+        setCustomMaterialText("");
+        return;
+      }
+
+      // Add the new material (preserving original casing)
+      const newMaterials = [...config.materials, material];
+      updateApprovalConfig(appt.id, "materials", newMaterials);
+      setCustomMaterialText("");
+      // showToast(`Added custom material: ${material}`, "success");
+    };
+
+    // Filter out fixed options to only show custom added ones as chips
+    const customMaterials = config.materials.filter(
+      (m) => !allowedOptions.includes(m),
+    );
+
+    return (
+      <td
+        colSpan="6"
+        className="p-6 bg-gray-50 border-t border-gray-200 shadow-inner">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Appointment/Customer Details */}
+          <div className="flex-1 space-y-4 pr-6 border-r border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
+              <User size={18} className="mr-2 text-blue-600" /> Customer &
+              Appointment Info
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <DetailItem
+                label="Full Name"
+                value={`${appt.customer?.firstName || ""} ${
+                  appt.customer?.lastName || ""
+                }`}
+                icon={User}
+              />
+              <DetailItem
+                label="Purpose"
+                value={appt.purpose}
+                icon={Briefcase}
+              />
+              <DetailItem
+                label="Email"
+                value={appt.customer?.email}
+                icon={Mail}
+              />
+              <DetailItem
+                label="Phone"
+                value={appt.customer?.phone}
+                icon={Phone}
+              />
+              <DetailItem
+                label="Date"
+                value={appt.reassignedDate || appt.appointmentDate}
+                icon={Calendar}
+              />
+              <DetailItem
+                label="Time"
+                value={`${appt.reassignedTimeFrom || appt.timeFrom} - ${
+                  appt.reassignedTimeTo || appt.timeTo
+                }`}
+                icon={Clock}
+              />
+              <DetailItem
+                label="Organization"
+                value={appt.customer?.organization}
+                icon={Briefcase}
+              />
+              <DetailItem
+                label="Location"
+                value={`${appt.customer?.city || ""}, ${
+                  appt.customer?.country || ""
+                }`}
+                icon={MapPin}
+              />
+            </div>
+          </div>
+
+          {/* Security & Action Controls */}
+          <div className="flex-1 space-y-4 pl-6">
+            <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
+              <ShieldCheck size={18} className="mr-2 text-green-600" /> Security
+              Configuration
+            </h3>
+
+            {/* Allowed Materials Checkboxes */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Fixed Allowed Materials
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                {allowedOptions.map((opt) => (
+                  <div key={opt} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`material-${appt.id}-${opt}`}
+                      value={opt}
+                      checked={config.materials.includes(opt)}
+                      onChange={handleMaterialChange}
+                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor={`material-${appt.id}-${opt}`}
+                      className="text-sm text-gray-700 select-none">
+                      {opt}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Material Input */}
+            <form onSubmit={handleAddCustomMaterial} className="space-y-2 pt-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Add Custom Material
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={customMaterialText}
+                  onChange={(e) => setCustomMaterialText(e.target.value)}
+                  placeholder="e.g., Tablet, Sketchpad, Drone"
+                  className="flex-grow border border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm disabled:opacity-50"
+                  disabled={!customMaterialText.trim()}>
+                  <Plus size={16} className="mr-1" /> Add
+                </button>
+              </div>
+            </form>
+
+            {/* Display Custom Materials */}
+            {customMaterials.length > 0 && (
+              <div className="space-y-1">
+                <label className="block text-sm font-medium text-gray-700">
+                  Custom Added:
+                </label>
+                <div className="flex flex-wrap gap-2 p-3 bg-white border border-dashed border-gray-200 rounded-lg shadow-sm">
+                  {customMaterials.map((material) => (
+                    <span
+                      key={material}
+                      className="inline-flex items-center px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full cursor-pointer hover:bg-purple-200 transition"
+                      onClick={() => handleRemoveCustomMaterial(material)}
+                      title="Click to remove">
+                      {material}
+                      <Trash2 size={12} className="ml-1 text-purple-600" />
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Inspection Radio Buttons */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Security Inspection Required
+              </label>
+              <div className="flex space-x-6 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+                {["Required", "Not Required"].map((status) => (
+                  <div key={status} className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id={`security-${appt.id}-${status}`}
+                      name={`security-check-${appt.id}`}
+                      value={status}
+                      checked={config.inspection === status}
+                      onChange={(e) =>
+                        updateApprovalConfig(
+                          appt.id,
+                          "inspection",
+                          e.target.value,
+                        )
+                      }
+                      className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor={`security-${appt.id}-${status}`}
+                      className="text-sm text-gray-700 select-none">
+                      {status}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-4 flex space-x-3 justify-end">
+              <button
+                onClick={() => handleApprove(appt)}
+                disabled={actionLoading === appt.id}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50">
+                {actionLoading === appt.id ? (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                ) : (
+                  <Check size={16} className="mr-2" />
+                )}
+                Approve
+              </button>
+              <button
+                // Opens the Rejection Prompt Modal
+                onClick={() => openRejectPrompt(appt.id)}
+                disabled={actionLoading === appt.id}
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md disabled:opacity-50">
+                {actionLoading === appt.id ? (
+                  <Loader2 size={16} className="mr-2 animate-spin" />
+                ) : (
+                  <Slash size={16} className="mr-2" />
+                )}
+                Reject
+              </button>
+              <button
+                onClick={() => setIsReassignModalOpen(true)}
+                disabled={actionLoading !== null} // Disable all actions if one is pending
+                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold shadow-md disabled:opacity-50">
+                <RotateCcw size={16} className="mr-2" /> Reassign
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    );
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        Pending Appointments
-      </h1>
-
-      {/* -------------------------------------- */}
-      {/* TABLE VIEW */}
-      {/* -------------------------------------- */}
-      <div className="bg-white rounded-xl shadow-lg overflow-x-auto border">
-        <table className="min-w-full divide-y divide-gray-200 text-gray-700">
-          <thead className="bg-gray-100 uppercase text-xs font-semibold tracking-wider">
-            <tr>
-              <th className="py-3 px-4 text-left">No</th>
-              <th className="py-3 px-4 text-left">Name</th>
-              <th className="py-3 px-4 text-left">Email</th>
-              <th className="py-3 px-4 text-left">Date</th>
-              <th className="py-3 px-4 text-left">Status</th>
-              <th className="py-3 px-4 text-center">Details</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
-            {appointments.length > 0 ? (
-              appointments.map((appt, idx) => (
-                <tr
-                  key={appt.id}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="py-3 px-4 text-sm">{idx + 1}</td>
-                  <td className="py-3 px-4 font-medium text-gray-900">
-                    {appt.firstName} {appt.middleName} {appt.lastName}
-                  </td>
-                  <td className="py-3 px-4 text-sm">{appt.email}</td>
-                  <td className="py-3 px-4 text-sm font-medium">{appt.date}</td>
-                  <td className="py-3 px-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
-                      {appt.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <Eye
-                      size={18}
-                      className="text-gray-500 hover:text-blue-600 cursor-pointer inline-block"
-                      onClick={() => handleOpenDrawer(appt)}
-                    />
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="text-center py-8 text-gray-500 italic"
-                >
-                  No pending appointments found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* -------------------------------------- */}
-      {/* 🔹 SLIDE-OVER DRAWER (Details & Actions) */}
-      {/* -------------------------------------- */}
-      <div
-        className={`fixed inset-0 z-50 transition-opacity duration-300 ${
-          selectedAppointment
-            ? "opacity-100 visible"
-            : "opacity-0 invisible pointer-events-none"
-        }`}
-        onClick={handleCloseDrawer} // Close on backdrop click
-      >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/50"></div>
-
-        {/* Panel */}
-        <div
-          className={`fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-2xl transform transition-transform duration-300 ease-in-out ${
-            selectedAppointment ? "translate-x-0" : "translate-x-full"
-          }`}
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking panel content
-        >
-          {selectedAppointment && (
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="p-6 border-b flex justify-between items-center">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Appointment Review
-                </h3>
-                <button
-                  className="text-gray-400 hover:text-gray-700"
-                  onClick={handleCloseDrawer}
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              {/* Body Content */}
-              <div className="p-6 overflow-y-auto flex-grow space-y-8">
-                {/* 1. VISITOR DETAILS */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
-                    <User size={20} className="mr-2 text-blue-600" /> Visitor
-                    Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <DetailItem
-                      label="First Name"
-                      value={selectedAppointment.firstName}
-                      icon={User}
-                    />
-                    <DetailItem
-                      label="Middle Name"
-                      value={selectedAppointment.middleName}
-                      icon={User}
-                    />
-                    <DetailItem
-                      label="Last Name"
-                      value={selectedAppointment.lastName}
-                      icon={User}
-                    />
-                    <DetailItem
-                      label="Occupation"
-                      value={selectedAppointment.occupation}
-                      icon={Briefcase}
-                    />
-                    <DetailItem
-                      label="Organization"
-                      value={selectedAppointment.organization}
-                      icon={Briefcase}
-                    />
-                    <DetailItem
-                      label="Country"
-                      value={selectedAppointment.country}
-                      icon={MapPin}
-                    />
-                    <DetailItem
-                      label="Email"
-                      value={selectedAppointment.email}
-                      icon={Mail}
-                    />
-                    <DetailItem
-                      label="Phone"
-                      value={selectedAppointment.phone}
-                      icon={Phone}
-                    />
-                  </div>
-                </div>
-
-                {/* 2. APPOINTMENT DETAILS */}
-                <div className="space-y-4 pt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
-                    <Calendar size={20} className="mr-2 text-blue-600" />{" "}
-                    Appointment Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <DetailItem
-                      label="Date"
-                      value={selectedAppointment.date}
-                      icon={Calendar}
-                    />
-                    <DetailItem
-                      label="Time Slot"
-                      value={selectedAppointment.time}
-                      icon={Calendar}
-                    />
-                  </div>
-
-                  <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase mt-2">
-                      Purpose
-                    </p>
-                    <p className="p-3 bg-gray-100 rounded-lg text-sm text-gray-800">
-                      {selectedAppointment.purpose}
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3. MATERIAL ASSIGNMENT (Optional Checkboxes) */}
-                <div className="space-y-4 pt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
-                    <RotateCcw size={20} className="mr-2 text-blue-600" />{" "}
-                    Material Assignment (Optional)
-                  </h4>
-
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-2">
-                      **Select Allowed Materials**
-                    </label>
-
-                    <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 border rounded-lg">
-                      {allowedOptions.map((opt) => (
-                        <div key={opt} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={`material-${opt}`}
-                            value={opt}
-                            checked={allowedMaterialSelection.includes(opt)}
-                            onChange={handleMaterialChange}
-                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label
-                            htmlFor={`material-${opt}`}
-                            className="text-sm text-gray-700 cursor-pointer"
-                          >
-                            {opt}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. 🆕 SECURITY CHECK REQUIREMENT */}
-                <div className="space-y-4 pt-4">
-                  <h4 className="text-lg font-semibold text-gray-800 border-b pb-2 flex items-center">
-                    <ShieldCheck size={20} className="mr-2 text-blue-600" />{" "}
-                    Security Check Requirement
-                  </h4>
-
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-700 mb-2">
-                      **Is a Security Check Required for this visitor?**
-                    </label>
-
-                    <div className="flex space-x-6 p-3 bg-gray-50 border rounded-lg">
-                      {["Required", "Not Required"].map((status) => (
-                        <div
-                          key={status}
-                          className="flex items-center space-x-2"
-                        >
-                          <input
-                            type="radio"
-                            id={`security-${status}`}
-                            name="security-check-required"
-                            value={status}
-                            checked={securityCheckRequired === status}
-                            onChange={handleSecurityChange}
-                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                          />
-                          <label
-                            htmlFor={`security-${status}`}
-                            className="text-sm text-gray-700 cursor-pointer"
-                          >
-                            {status}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Actions */}
-              <div className="p-4 border-t bg-gray-50 flex justify-end space-x-3">
-                <button
-                  onClick={handleReject}
-                  className="flex items-center bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition shadow-md"
-                >
-                  <Slash size={18} className="mr-1" /> Reject
-                </button>
-                <button
-                  onClick={handleApprove}
-                  className="flex items-center bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg transition shadow-md"
-                >
-                  <Check size={18} className="mr-1" /> Approve
-                </button>
-              </div>
-            </div>
-          )}
+    <div className="min-h-screen bg-gray-50  ">
+      {fetchError && (
+        <div className="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg flex items-center">
+          <AlertTriangle size={20} className="mr-2" />
+          {fetchError}
         </div>
-      </div>
+      )}
+
+      {isListLoading ? (
+        <div className="text-center p-10 text-gray-600 flex items-center justify-center">
+          <Loader2 size={24} className="mr-2 animate-spin" /> Loading pending
+          appointments...
+        </div>
+      ) : appointments.length === 0 ? (
+        <div className="text-center p-10 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+          <Info size={30} className="mx-auto text-gray-400 mb-3" />
+          <p className="text-lg font-medium">No pending appointments found.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-blue-50/50">
+              <tr>
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase w-1">
+                  No
+                </th>
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                  Name
+                </th>
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                  Email
+                </th>
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden sm:table-cell">
+                  Date
+                </th>
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                  Status
+                </th>
+                <th className="py-3 px-4 text-right text-xs font-bold text-gray-600 uppercase w-1">
+                  <Eye size={16} />
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {appointments.map((appt, index) => (
+                <React.Fragment key={appt.id}>
+                  <tr
+                    className="hover:bg-gray-50 cursor-pointer transition duration-150"
+                    onClick={() => handleToggleExpand(appt.id)}>
+                    <td className="py-3 px-4 text-sm font-medium text-gray-500">
+                      {index + 1}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-gray-900">
+                      {appt.customer?.firstName} {appt.customer?.lastName}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600">
+                      {appt.customer?.email}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600 hidden sm:table-cell">
+                      {appt.reassignedDate || appt.appointmentDate}
+                    </td>
+                    <td className="py-3 px-4 text-sm capitalize">
+                      <span className="inline-flex items-center px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full shadow-sm">
+                        <Clock size={12} className="mr-1" />
+                        {appt.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        className="text-gray-500 hover:text-blue-600 p-1 transition rounded-full"
+                        aria-label={
+                          expandedId === appt.id
+                            ? "Collapse Details"
+                            : "Expand Details"
+                        }>
+                        {expandedId === appt.id ? (
+                          <ChevronUp size={18} />
+                        ) : (
+                          <ChevronDown size={18} />
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                  {expandedId === appt.id && (
+                    <tr className="border-b border-blue-200">
+                      <ExpandedRow appt={appt} />
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Reassign Modal */}
+      <ReassignModal
+        isOpen={isReassignModalOpen && selectedAppointment !== null}
+        onClose={() => setIsReassignModalOpen(false)}
+        onSubmit={handleReassignSubmit}
+        initialData={selectedAppointment}
+        allowedOptions={allowedOptions}
+      />
+
+      {/* Rejection Reason Modal */}
+      <RejectionPromptModal
+        isOpen={isRejectPromptOpen && currentApptToRejectId !== null}
+        onClose={() => {
+          setIsRejectPromptOpen(false);
+          setCurrentApptToRejectId(null);
+        }}
+        onSubmit={(reason) => handleReject(currentApptToRejectId, reason)}
+        isLoading={actionLoading === currentApptToRejectId}
+      />
+
+      {/* Global Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "info" })}
+      />
     </div>
   );
 }

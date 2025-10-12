@@ -7,20 +7,17 @@ import {
 } from "react-router-dom";
 import Login from "./components/Login";
 import CreateAppointment from "./components/CreateAppointment";
-import EditAppointment from "./pages/EditAppointment";
 import ViewAppointment from "./pages/ViewAppointment";
-import SecretaryPage from "./pages/SecretaryPage";
-import SecurityPage from "./pages/SecurityPage";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AppointmentRequests from "./pages/Appointment";
 import PendingAppointmentsPage from "./pages/PendingAppointments";
 import { PERMISSIONS } from "./permissions";
 import Layout from "./components/Layout";
 import Profile from "./pages/Profile";
-import Integrity from "./pages/Integrity";
-import CreateAccount from "./pages/CreateAccount";
 import RolesPage from "./pages/RolesPage";
+import CreateAccount from "./pages/CreateAccount";
+import CheckInPage from "./pages/CheckInPage";
+import SecurityCheckPage from "./pages/SecurityCheckPage";
 
 function App() {
   return (
@@ -28,26 +25,24 @@ function App() {
       <Routes>
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/createAccount" element={<CreateAccount />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/integrity" element={<Integrity />} />
         <Route path="/" element={<Navigate to="/login" />} />
-        {/* Protected routes */}
         <Route
           path="/dashboard"
           element={
-            <Layout>
-              <Dashboard />
-            </Layout>
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_DASHBOARD}>
+              <Layout>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
           }
         />
-
         <Route
-          path="/roles"
+          path="/create"
           element={
-            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_ROLES}>
+            <ProtectedRoute requiredPermission={PERMISSIONS.CREATE_APPOINTMENT}>
               <Layout>
-                <RolesPage />
+                <CreateAppointment />
               </Layout>
             </ProtectedRoute>
           }
@@ -62,47 +57,32 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard/>
-            </ProtectedRoute>
-          }
-        /> */}
         <Route
-          path="/create"
+          path="/roles"
           element={
-            <Layout>
-              <CreateAppointment />
-            </Layout>
-          }
-        />
-        <Route path="/edit" element={<EditAppointment />} />
-        <Route
-          path="/view"
-          element={
-            <Layout>
-              <ViewAppointment />
-            </Layout>
-          }
-        />
-        <Route
-          path="/appointment"
-          element={
-            <ProtectedRoute requiredPermission={PERMISSIONS.APPROVE_REQUEST}>
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_ROLES}>
               <Layout>
-                <AppointmentRequests />
+                <RolesPage />
               </Layout>
             </ProtectedRoute>
           }
         />
         <Route
-          path="/secretary"
+          path="/checkin"
           element={
             <ProtectedRoute requiredPermission={PERMISSIONS.CHECK_IN}>
               <Layout>
-                <SecretaryPage />
+                <CheckInPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <ProtectedRoute requiredPermission={PERMISSIONS.MANAGE_ROLES}>
+              <Layout>
+                <CreateAccount />
               </Layout>
             </ProtectedRoute>
           }
@@ -112,7 +92,17 @@ function App() {
           element={
             <ProtectedRoute requiredPermission={PERMISSIONS.CHECK_OUT}>
               <Layout>
-                <SecurityPage />
+                <SecurityCheckPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/view"
+          element={
+            <ProtectedRoute requiredPermission={PERMISSIONS.VIEW_APPOINTMENT}>
+              <Layout>
+                <ViewAppointment />
               </Layout>
             </ProtectedRoute>
           }

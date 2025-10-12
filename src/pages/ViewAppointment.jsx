@@ -8,11 +8,12 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
-
 const BACKEND_URL = "http://localhost:3000/requests";
 const ALL_APPOINTMENTS_ENDPOINT = `${BACKEND_URL}/all`;
 const UPDATE_APPOINTMENT_ENDPOINT = `${BACKEND_URL}`;
-const DELETE_APPOINTMENT_ENDPOINT = `${BACKEND_URL}/delete`;
+const DELETE_APPOINTMENT_ENDPOINT = `${BACKEND_URL}`;
+// NEW: Endpoint for Check-in/out status
+const CHECKINOUT_ENDPOINT = "http://localhost:3000/checkinout";
 
 const INITIAL_MOCK_APPOINTMENTS = [];
 
@@ -22,8 +23,32 @@ const statusStyles = {
   Pending: "bg-yellow-100 text-yellow-800",
   Rejected: "bg-red-100 text-red-800",
   Reassigned: "bg-orange-100 text-orange-800",
-  Completed: "bg-blue-100 text-blue-800", // ✅ calm blue for success/completion
-  Cancelled: "bg-gray-100 text-gray-800",
+  // Backend status:
+  Completed: "bg-yellow-100 text-yellow-800",
+};
+
+// --- TIME FORMATTING HELPER ---
+/**
+ * Converts a 24-hour time string ("HH:MM") to a 12-hour format ("HH:MM AM/PM").
+ * Pads the hour to two digits for consistency with the form's input structure.
+ * @param {string} time24 - Time string in 24-hour format (e.g., "09:00" or "14:30").
+ * @returns {string} - Time string in 12-hour format (e.g., "09:00 AM" or "02:30 PM").
+ */
+const formatTime12Hour = (time24) => {
+  if (!time24 || time24.length !== 5 || !time24.includes(":")) return time24;
+
+  const [hourStr, minute] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+  const period = hour >= 12 ? "PM" : "AM";
+
+  if (hour === 0) {
+    hour = 12; // 00:00 is 12 AM
+  } else if (hour > 12) {
+    hour -= 12; // 13:00 is 1 PM
+  }
+
+  // Pad the hour to two digits for form consistency (e.g., "09:00 AM")
+  return `${hour.toString().padStart(2, "0")}:${minute} ${period}`;
 };
 
 // --- DATA TRANSFORMATION FUNCTIONS ---
@@ -34,17 +59,30 @@ const statusStyles = {
  * @returns {object} - Transformed appointment object.
  */
 const transformBackendToClient = (backendAppt) => {
+  // NEW: Convert time from 24h to 12h format with AM/PM
+  const timeFrom12 = formatTime12Hour(backendAppt.timeFrom);
+  const timeTo12 = formatTime12Hour(backendAppt.timeTo);
+
   // Combine timeFrom and timeTo into a single 'time' string for display
-  const time = `${backendAppt.timeFrom} - ${backendAppt.timeTo}`;
+  const time = `${timeFrom12} - ${timeTo12}`;
 
   // Use reassignedDate/time if they exist and status is 'Rescheduled'
   const date =
-    backendAppt.status === "rescheduled" && backendAppt.reassignedDate
+    backendAppt.status === "reassigned" && backendAppt.reassignedDate
       ? backendAppt.reassignedDate
       : backendAppt.appointmentDate;
+
+  // Also convert reassigned times to 12-hour format if they exist
+  const reassignedTimeFrom12 = backendAppt.reassignedTimeFrom
+    ? formatTime12Hour(backendAppt.reassignedTimeFrom)
+    : null;
+  const reassignedTimeTo12 = backendAppt.reassignedTimeTo
+    ? formatTime12Hour(backendAppt.reassignedTimeTo)
+    : null;
+
   const displayTime =
-    backendAppt.status === "rescheduled" && backendAppt.reassignedTimeFrom
-      ? `${backendAppt.reassignedTimeFrom} - ${backendAppt.reassignedTimeTo}`
+    backendAppt.status === "reassigned" && reassignedTimeFrom12
+      ? `${reassignedTimeFrom12} - ${reassignedTimeTo12}`
       : time;
 
   return {
@@ -61,16 +99,16 @@ const transformBackendToClient = (backendAppt) => {
     organization: backendAppt.customer.organization,
     occupation: backendAppt.customer.occupation,
     date: date, // Using 'appointmentDate' or 'reassignedDate'
-    time: displayTime, // Using combined time or reassigned time
+    time: displayTime, // Using combined time or reassigned time (E.g., "09:00 AM - 10:00 AM")
     status:
       backendAppt.status.charAt(0).toUpperCase() + backendAppt.status.slice(1), // Capitalize first letter for display
     purpose: backendAppt.purpose,
     plateNum: backendAppt.plateNum || "", // If null, default to blank string ""
-    checkInPosition: backendAppt.checkInPosition || "", // NEW: Check-in Position
-    checkOutPosition: backendAppt.checkOutPosition || "", // NEW: Check-out Position
-    // Store original time values for form pre-population (if not rescheduled)
-    originalTimeFrom: backendAppt.timeFrom,
-    originalTimeTo: backendAppt.timeTo,
+    // REMOVED: checkInPosition: backendAppt.checkInPosition || "",
+    // REMOVED: checkOutPosition: backendAppt.checkOutPosition || "",
+    // originalTimeFrom/To fields removed as they are redundant when 'time' field is used for form pre-population
+    // originalTimeFrom: backendAppt.timeFrom,
+    // originalTimeTo: backendAppt.timeTo,
     // Store customer ID for full update payload
     customerId: backendAppt.customer.id,
   };
@@ -109,7 +147,7 @@ const prepareAppointmentForForm = (appt) => {
  * @returns {object} - Payload for the backend update API.
  */
 const prepareFormForSave = (formData) => {
-  // Reconstruct time strings (e.g., "04:20 PM")
+  // Reconstruct time strings (e.g., "04:20 PM") - This is what the backend is now expected to handle.
   const timeFrom = `${formData.startHour}:${formData.startMinute} ${formData.startPeriod}`;
   const timeTo = `${formData.endHour}:${formData.endMinute} ${formData.endPeriod}`;
 
@@ -194,12 +232,15 @@ const DetailItem = ({
   value,
   colored = false,
   colorClass = "text-gray-800",
+  icon: Icon,
 }) => (
-  <div className="flex py-2 sm:py-3">
+  <div className="flex py-2 sm:py-3 items-center gap-2">
+    {Icon && (
+      <Icon className={`w-5 h-5 ${colored ? colorClass : "text-gray-500"}`} />
+    )}
     <div className="text-base font-bold text-gray-700 pr-4 min-w-[120px] whitespace-nowrap">
       {label}
     </div>
-    {/* Display blank "" if value is null, undefined, or empty string */}
     <div className={`text-base ${colored ? colorClass : "text-gray-800"}`}>
       {value || ""}
     </div>
@@ -219,10 +260,107 @@ const ModalStatusBadge = ({ status }) => {
   return <span className={`${baseClasses} ${colorClasses}`}>{status}</span>;
 };
 
+// NEW: Component to fetch and display the check-in/out status
+const CheckInOutStatus = ({ requestId }) => {
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      setLoading(true);
+      setError(null);
+      const token = getAuthToken(); // Assuming getAuthToken is available globally
+
+      if (!token) {
+        setError("Missing authentication token.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${CHECKINOUT_ENDPOINT}/${requestId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setStatus(data);
+      } catch (e) {
+        console.error("Failed to fetch check-in/out status:", e);
+        setError("Failed to load status.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatus();
+  }, [requestId]);
+
+  if (loading) {
+    return (
+      <div className="col-span-1 md:col-span-2 flex items-center text-sm text-gray-500 py-2 sm:py-3">
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading Status...
+      </div>
+    );
+  }
+
+  if (error) {
+    return <span className="text-sm text-red-500 py-2 sm:py-3">{error}</span>;
+  }
+
+  if (!status) {
+    return (
+      <span className="text-sm text-gray-500 py-2 sm:py-3">
+        Status Not Found
+      </span>
+    );
+  }
+
+  // Determine display strings based on API response
+  const checkInDisplay = status.checkedIn ? "Checked In" : "Not Checked In";
+  const checkOutDisplay = status.checkedOut ? "Checked Out" : "Not Checked Out";
+
+  // Custom DetailItem to display the fetched status
+  return (
+    <>
+      <DetailItem
+        label="Check-in Status"
+        value={checkInDisplay}
+        colored={true}
+        colorClass={
+          status.checkedIn
+            ? "text-green-600 font-semibold"
+            : "text-gray-500 font-medium"
+        }
+      />
+      <DetailItem
+        label="Check-out Status"
+        value={checkOutDisplay}
+        colored={true}
+        colorClass={
+          status.checkedOut
+            ? "text-red-600 font-semibold"
+            : "text-gray-500 font-medium"
+        }
+      />
+    </>
+  );
+};
+
 const ViewAppointmentModal = ({ appointment, onClose }) => {
   if (!appointment) return null;
 
   const [timeFrom, timeTo] = appointment.time.split(" - ");
+  // Use the appointment ID as the request ID for fetching check-in/out status
+  const requestId = appointment.id;
 
   return (
     <div
@@ -276,19 +414,8 @@ const ViewAppointmentModal = ({ appointment, onClose }) => {
             {/* Spacer for alignment */}
             <DetailItem label="From Time" value={timeFrom.trim()} />
             <DetailItem label="To Time" value={timeTo.trim()} />
-            {/* NEW: Check-in/Check-out Positions with Color */}
-            <DetailItem
-              label="Check-in Pos"
-              value={appointment.checkInPosition}
-              colored={true}
-              colorClass="text-green-600 font-semibold"
-            />
-            <DetailItem
-              label="Check-out Pos"
-              value={appointment.checkOutPosition}
-              colored={true}
-              colorClass="text-red-600 font-semibold"
-            />
+            {/* NEW: Dynamic Check-in/Check-out Status */}
+            <CheckInOutStatus requestId={requestId} />
             {/* Status: Spans the full width */}
             <div className="col-span-1 md:col-span-2 py-2 sm:py-3">
               <div className="flex items-center">
@@ -539,25 +666,6 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
               />
             </div>
 
-            {/* Status */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status *
-              </label>
-              {/* NOTE: Added a default 'Pending' to the options */}
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                required>
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Rescheduled">Rescheduled</option>
-              </select>
-            </div>
-
             {/* Time Range (Logic unchanged) */}
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -715,7 +823,7 @@ export default function App() {
   const [appointments, setAppointments] = useState(INITIAL_MOCK_APPOINTMENTS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [saving] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
@@ -789,9 +897,9 @@ export default function App() {
   }, []);
 
   // Handler for when the Edit form is saved
-  // Handler for when the Edit form is saved
   const handleSave = useCallback(async (updatedFormData) => {
     // 1. Transform data back to the list's original structure
+    // NOTE: updatedFormData is the transformed object (with startHour, etc.) from EditAppointmentForm
     const updatedData = prepareFormForSave(updatedFormData);
 
     // 2. Retrieve token and check for existence
@@ -805,8 +913,7 @@ export default function App() {
 
     // 3. Attempt to call the API
     try {
-      // We are attempting the API call BEFORE the local state update.
-      // This handles the error first, minimizing state inconsistencies.
+      setSaving(true);
       const response = await fetch(
         `${UPDATE_APPOINTMENT_ENDPOINT}/${updatedData.id}`,
         {
@@ -829,8 +936,33 @@ export default function App() {
       }
 
       // 4. Update the appointment list in local state upon success
+      // NOTE: We should re-transform the successful backend response if possible,
+      // but since we only have the payload here, we use the payload structure.
+      // A better practice would be to call fetchAppointments() here for full refresh.
       setAppointments((prev) =>
-        prev.map((appt) => (appt.id === updatedData.id ? updatedData : appt)),
+        prev.map((appt) => {
+          if (appt.id === updatedData.id) {
+            // Apply updates to the existing client-side model structure (re-transforming for consistency)
+            const newClientAppt = {
+              ...appt,
+              // Update all fields that were editable/changed
+              date: updatedData.appointmentDate,
+              time: `${updatedData.timeFrom} - ${updatedData.timeTo}`,
+              status:
+                updatedData.status.charAt(0).toUpperCase() +
+                updatedData.status.slice(1),
+              purpose: updatedData.purpose,
+              plateNum: updatedData.plateNum,
+              firstName: updatedData.customer.firstName,
+              lastName: updatedData.customer.lastName,
+              email: updatedData.customer.email,
+              phoneNo: updatedData.customer.phone,
+              // Other customer fields...
+            };
+            return newClientAppt;
+          }
+          return appt;
+        }),
       );
 
       console.log("Update successful for appointment ID:", updatedData.id);
@@ -842,6 +974,8 @@ export default function App() {
       );
       // Do not change mode here if update failed. User should re-try or cancel.
       return;
+    } finally {
+      setSaving(false);
     }
 
     // 6. Navigate back to the list view only after successful save
@@ -924,7 +1058,8 @@ export default function App() {
   // RENDER the Appointment List View
   if (mode === "list") {
     return (
-      <div className="min-h-screen bg-gray-50  font-sans">
+      <div className="min-h-screen bg-gray-50 font-sans">
+        {/* Filters */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col md:flex-row gap-4 items-center">
           {/* Search */}
           <div className="relative w-full md:w-1/3">
@@ -944,12 +1079,10 @@ export default function App() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="reassigned">Reassigned</option>
-            <option value="rejected">Rejected</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="Approved">Approved</option>
+            <option value="Pending">Pending</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Rescheduled">Rescheduled</option>
           </select>
 
           {/* Date Filter */}
@@ -1032,7 +1165,7 @@ export default function App() {
                       <span className="font-semibold w-20">Date:</span>{" "}
                       {app.date}
                     </p>
-                    {/* UPDATED: Display From and To times */}
+                    {/* UPDATED: Display From and To times (includes AM/PM via app.time) */}
                     <p className="flex items-center">
                       <span className="font-semibold w-20">From:</span>{" "}
                       {app.time.split(" - ")[0].trim()}

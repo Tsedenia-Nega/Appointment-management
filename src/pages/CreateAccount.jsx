@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+// Placeholder for the base URL. In a real project, this would be imported from a config file.
 const API_BASE_URL = "http://localhost:3000";
+// const API_BASE_URL = import.meta.env.API_BASE_URL;
 
-const ACCESS_TOKEN_KEY = "token";
+const ACCESS_TOKEN_KEY = "token"; // <--- CORRECTED KEY to match the Login component
+
+// Utility to format canonical role keys (e.g., 'FRONT_DESK') to display names ("Front Desk")
 const formatRoleKey = (key) => {
   if (!key) return "";
   return key
@@ -12,6 +16,7 @@ const formatRoleKey = (key) => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
+// Component to handle notification messages without using alert()
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 
@@ -36,25 +41,29 @@ const Notification = ({ message, type, onClose }) => {
 
 const CreateAccount = () => {
   const navigate = useNavigate();
-
+  // State for all form fields. 'role' stores the canonical key (e.g., 'FRONT_DESK')
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
     lastName: "",
     email: "",
-    role: "",
+    role: "", // Stores the canonical key for API submission
     password: "",
   });
 
+  // UI state
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
+  // State for dynamically loaded roles (stores { key: 'FRONT_DESK', display: 'Front Desk' })
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedRoleDisplay, setSelectedRoleDisplay] = useState("Select Role");
   const [rolesError, setRolesError] = useState("");
 
+  // Function to fetch roles with exponential backoff and retry logic
   const fetchRoles = useCallback(async (retries = 3) => {
+    // Note: The hardcoded list is only a fallback and does not contain CEO
     const canonicalRoles = ["FRONT_DESK", "SECRETARY", "SECURITY"];
     setRolesError("");
 
@@ -70,29 +79,34 @@ const CreateAccount = () => {
 
         const rolesData = await response.json();
 
+        // Map the data into the { key: canonical_name, display: friendly_name } format
         const formattedRoles = rolesData.map((role) => ({
-          key: role.name,
+          key: role.name, // Assuming the API returns a 'name' property with the canonical key
           display: formatRoleKey(role.name),
         }));
 
+        // FILTER: Remove the 'CEO' role from the list before setting state
         const filteredRoles = formattedRoles.filter(
           (role) => role.key !== "CEO",
         );
 
         setAvailableRoles(filteredRoles);
-        return;
+        return; // Success, exit function
       } catch (error) {
         console.error(`Attempt ${i + 1} failed:`, error);
         if (i < retries - 1) {
           const delay = Math.pow(2, i) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
+          // Final attempt failed, use hardcoded canonical roles as a last resort
           const fallbackRoles = canonicalRoles.map((key) => ({
             key: key,
             display: formatRoleKey(key),
           }));
           setAvailableRoles(fallbackRoles);
-
+          // setRolesError(
+          //   "Could not load roles after multiple attempts. Using fallback roles. Check backend API connection."
+          // );
           return;
         }
       }
@@ -220,8 +234,8 @@ const CreateAccount = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 border border-gray-200">
-        <h2 className="text-3xl font-extrabold text-center text-gray-800 mb-8">
-          Create User Account
+        <h2 className="text-2xl  text-center text-gray-800 mb-8">
+          Create User
         </h2>
 
         {rolesError && (
@@ -349,9 +363,6 @@ const CreateAccount = () => {
               minLength={8}
               className="w-full border border-gray-300 rounded-lg px-4 py-2.5 transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Minimum 8 characters required.
-            </p>
           </div>
 
           {/* Submit Button */}
