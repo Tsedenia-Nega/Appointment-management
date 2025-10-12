@@ -1,13 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // for redirect
+import { useAuth } from "../context/useAuth"; // import context
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { setUser } = useAuth(); // get setter from context
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically handle authentication
-    console.log('Login attempt with:', { email, password });
+
+    try {
+      const res = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Login failed");
+      }
+
+      const data = await res.json();
+
+      // Save token & user in localStorage
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ ...data.user, access_token: data.access_token }),
+      );
+
+      // Update context
+      setUser({ ...data.user, access_token: data.access_token });
+
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message);
+      console.error(err);
+    }
   };
 
   return (
@@ -20,9 +54,7 @@ function Login() {
               className="w-6 h-6 text-white"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              {/* Calendar outline */}
+              stroke="currentColor">
               <rect
                 x="3"
                 y="4"
@@ -34,7 +66,6 @@ function Login() {
                 stroke="currentColor"
                 fill="none"
               />
-              {/* Checkmark */}
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -56,8 +87,7 @@ function Login() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+              className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
@@ -76,8 +106,7 @@ function Login() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
+              className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -92,10 +121,11 @@ function Login() {
             />
           </div>
 
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <button
             type="submit"
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             Sign in
           </button>
         </form>

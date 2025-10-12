@@ -1,72 +1,124 @@
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   Legend,
-// } from "recharts";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import React, { useEffect, useState } from "react";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { useAuth } from "../context/useAuth";
 
-const data = [
-  { name: "Silver", visits: 4 },
-  { name: "Platinum", visits: 10 },
-  { name: "Gold", visits: 15 },
-];
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const [data, setData] = useState({
+    approved: 0,
+    rejected: 0,
+    completed: 0,
+    pending: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!user?.access_token) return;
+
+    const fetchDashboard = async () => {
+      try {
+        const res = await fetch("http://localhost:3000/requests/dashboard", {
+          headers: { Authorization: `Bearer ${user.access_token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch dashboard data");
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, [user]);
+
+  if (loading) return <p className="p-6">Loading dashboard...</p>;
+  if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
+
+  const chartData = {
+    labels: ["Approved", "Rejected", "Completed", "Pending"],
+    datasets: [
+      {
+        label: "Requests Count",
+        data: [
+          data.approved + data.completed,
+          data.rejected,
+          data.completed,
+          data.pending,
+        ],
+        backgroundColor: ["#4ade80", "#f87171", "#60a5fa", "#fbbf24"],
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: "Appointment Requests Status",
+        font: { size: 14 },
+      },
+    },
+    maintainAspectRatio: false,
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+  };
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Navbar />
-
-        <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-6">Dashboard</h2>
-
-          {/* Tabs */}
-          <div className="flex space-x-6 border-b mb-8">
-            <button className="pb-2 border-b-2 border-blue-600 text-blue-600">
-              DASHBOARD
-            </button>
-            <button className="pb-2 text-gray-500">REQUEST</button>
-            <button className="pb-2 text-gray-500">APPOINTMENTS</button>
-            <button className="pb-2 text-gray-500">INTEGRITY</button>
+    <div className="p-10">
+      {/* Container: Cards + Chart */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Cards */}
+        <div className="grid grid-cols-2 gap-4 flex-1">
+          <div className="bg-white p-3 rounded-xl shadow hover:shadow-lg transition h-26 flex flex-col justify-center items-center">
+            <p className="text-gray-500 text-sm">Approved</p>
+            <h3 className="text-xl font-bold mt-1">
+              {data.approved + data.completed}
+            </h3>
           </div>
-
-          {/* Cards */}
-          <div className="grid grid-cols-3 gap-6 mb-10">
-            <div className="bg-white p-5 rounded-xl shadow">
-              <p className="text-gray-500">Approved</p>
-              <h3 className="text-3xl font-bold mt-2">2,420</h3>
-              <div className="text-blue-500 mt-3 text-sm">↗</div>
-            </div>
-            <div className="bg-white p-5 rounded-xl shadow">
-              <p className="text-gray-500">Rejected</p>
-              <h3 className="text-3xl font-bold mt-2">1,210</h3>
-              <div className="text-red-500 mt-3 text-sm">↘</div>
-            </div>
-            <div className="bg-white p-5 rounded-xl shadow">
-              <p className="text-gray-500">Completed</p>
-              <h3 className="text-3xl font-bold mt-2">16</h3>
-              <div className="text-blue-500 mt-3 text-sm">↗</div>
-            </div>
+          <div className="bg-white p-3 rounded-xl shadow hover:shadow-lg transition h-26 flex flex-col justify-center items-center">
+            <p className="text-gray-500 text-sm">Rejected</p>
+            <h3 className="text-xl font-bold mt-1">{data.rejected}</h3>
           </div>
-
-          {/* Chart */}
-          <div className="bg-white rounded-xl shadow p-6">
-            <h3 className="font-semibold mb-4">Analytics Overview</h3>
-            {/* <BarChart width={600} height={250} data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="visits" fill="#2563eb" />
-            </BarChart> */}
+          <div className="bg-white p-3 rounded-xl shadow hover:shadow-lg transition h-26 flex flex-col justify-center items-center">
+            <p className="text-gray-500 text-sm">Completed</p>
+            <h3 className="text-xl font-bold mt-1">{data.completed}</h3>
           </div>
+          <div className="bg-white p-3 rounded-xl shadow hover:shadow-lg transition h-26 flex flex-col justify-center items-center">
+            <p className="text-gray-500 text-sm">Pending</p>
+            <h3 className="text-xl font-bold mt-1">{data.pending}</h3>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="bg-white rounded-xl shadow p-4 w-full lg:w-1/3 h-64">
+          <h3 className="font-semibold mb-2 text-center text-sm">
+            Analytics Overview
+          </h3>
+          <Bar data={chartData} options={chartOptions} />
         </div>
       </div>
     </div>
