@@ -181,7 +181,7 @@ export default function AppointmentForm() {
       }
 
       const data = await res.json();
-      navigate("/appointment");
+      navigate("/create");
       console.log("Server response:", data);
 
       setFormData({
