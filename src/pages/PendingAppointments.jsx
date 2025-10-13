@@ -37,6 +37,10 @@ const allowedOptions = [
   "Camera",
 ];
 
+// --- Helper function for material logic (Critical for the fix) ---
+const normalizeMaterial = (m) => (m ? m.trim().toLowerCase() : "");
+// -----------------------------------------------------------------
+
 // --- 1. Toast Notification Component (Replaces alert/confirm) ---
 
 const Toast = ({ message, type, onClose }) => {
@@ -74,20 +78,22 @@ const Toast = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-[100] p-4 pr-10 rounded-lg shadow-lg border-l-4 transition-all duration-300 ${getColorClass(
-        type,
+      className={`fixed top-4 right-4 z-[100] p-4 pr-10 rounded-lg shadow-xl border-l-4 transition-all duration-300 ${getColorClass(
+        type
       )}`}
       style={{
         transform: message ? "translateX(0)" : "translateX(120%)",
         opacity: message ? 1 : 0,
-      }}>
+      }}
+    >
       <div className="flex items-center space-x-3">
         {getIcon(type)}
         <p className="text-sm font-medium text-gray-800">{message}</p>
       </div>
       <button
         onClick={onClose}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+      >
         <X size={16} />
       </button>
     </div>
@@ -146,7 +152,7 @@ const ReassignModal = ({
     const material = e.target.value;
     const isChecked = e.target.checked;
     setAllowedMaterials((prev) =>
-      isChecked ? [...prev, material] : prev.filter((m) => m !== material),
+      isChecked ? [...prev, material] : prev.filter((m) => m !== material)
     );
   };
 
@@ -178,152 +184,164 @@ const ReassignModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center transition-opacity"
-      onClick={onClose}>
+      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 transition-opacity"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center">
-            <RotateCcw className="w-5 h-5 mr-2 text-yellow-600" /> Reassign
-            Appointment
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
-            <X size={20} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="date"
-                className="block text-sm font-medium text-gray-700 mb-1">
-                New Date *
-              </label>
-              <input
-                type="date"
-                id="date"
-                value={reassignedDate}
-                onChange={(e) => setReassignedDate(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                required
-              />
-            </div>
-            <div className="flex space-x-2">
-              <div className="flex-1">
-                <label
-                  htmlFor="timeFrom"
-                  className="block text-sm font-medium text-gray-700 mb-1">
-                  Time From *
-                </label>
-                <input
-                  type="time"
-                  id="timeFrom"
-                  value={reassignedTimeFrom}
-                  onChange={(e) => setReassignedTimeFrom(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                  required
-                />
-              </div>
-              <div className="flex-1">
-                <label
-                  htmlFor="timeTo"
-                  className="block text-sm font-medium text-gray-700 mb-1">
-                  Time To *
-                </label>
-                <input
-                  type="time"
-                  id="timeTo"
-                  value={reassignedTimeTo}
-                  onChange={(e) => setReassignedTimeTo(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
-                  required
-                />
-              </div>
-            </div>
+        className="bg-white rounded-xl shadow-2xl w-full max-w-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center border-b pb-3 mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <RotateCcw className="w-5 h-5 mr-2 text-yellow-600" /> Reassign
+              Appointment
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100"
+            >
+              <X size={20} />
+            </button>
           </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Allowed Materials (Optional)
-            </label>
-            <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-              {allowedOptions.map((opt) => (
-                <div key={opt} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id={`modal-material-${opt}`}
-                    value={opt}
-                    checked={allowedMaterials.includes(opt)}
-                    onChange={handleMaterialChange}
-                    className="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
-                  />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="date"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  New Date *
+                </label>
+                <input
+                  type="date"
+                  id="date"
+                  value={reassignedDate}
+                  onChange={(e) => setReassignedDate(e.target.value)}
+                  className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  required
+                />
+              </div>
+              <div className="flex space-x-2">
+                <div className="flex-1">
                   <label
-                    htmlFor={`modal-material-${opt}`}
-                    className="text-sm text-gray-700 select-none">
-                    {opt}
+                    htmlFor="timeFrom"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Time From *
                   </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Security Inspection Required *
-            </label>
-            <div className="flex space-x-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-              {["Required", "Not Required"].map((status) => (
-                <div key={status} className="flex items-center space-x-2">
                   <input
-                    type="radio"
-                    id={`modal-security-${status}`}
-                    name="modal-security-check-required"
-                    value={status}
-                    checked={inspectionRequiredStatus === status}
-                    onChange={(e) =>
-                      setInspectionRequiredStatus(e.target.value)
-                    }
-                    className="h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                    type="time"
+                    id="timeFrom"
+                    value={reassignedTimeFrom}
+                    onChange={(e) => setReassignedTimeFrom(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
                     required
                   />
-                  <label
-                    htmlFor={`modal-security-${status}`}
-                    className="text-sm text-gray-700 select-none">
-                    {status}
-                  </label>
                 </div>
-              ))}
+                <div className="flex-1">
+                  <label
+                    htmlFor="timeTo"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Time To *
+                  </label>
+                  <input
+                    type="time"
+                    id="timeTo"
+                    value={reassignedTimeTo}
+                    onChange={(e) => setReassignedTimeTo(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-yellow-500 focus:border-yellow-500"
+                    required
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="pt-4 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
-              disabled={isLoading}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition shadow-md disabled:opacity-50"
-              disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 size={16} className="mr-2 animate-spin" />{" "}
-                  Reassigning...
-                </>
-              ) : (
-                <>
-                  <RotateCcw size={16} className="mr-2" /> Reassign
-                </>
-              )}
-            </button>
-          </div>
-        </form>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Allowed Materials (Optional)
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                {allowedOptions.map((opt) => (
+                  <div key={opt} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`modal-material-${opt}`}
+                      value={opt}
+                      checked={allowedMaterials.includes(opt)}
+                      onChange={handleMaterialChange}
+                      className="h-4 w-4 text-yellow-600 border-gray-300 rounded focus:ring-yellow-500"
+                    />
+                    <label
+                      htmlFor={`modal-material-${opt}`}
+                      className="text-sm text-gray-700 select-none"
+                    >
+                      {opt}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Security Inspection Required *
+              </label>
+              <div className="flex space-x-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                {["Required", "Not Required"].map((status) => (
+                  <div key={status} className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id={`modal-security-${status}`}
+                      name="modal-security-check-required"
+                      value={status}
+                      checked={inspectionRequiredStatus === status}
+                      onChange={(e) =>
+                        setInspectionRequiredStatus(e.target.value)
+                      }
+                      className="h-4 w-4 text-yellow-600 border-gray-300 focus:ring-yellow-500"
+                      required
+                    />
+                    <label
+                      htmlFor={`modal-security-${status}`}
+                      className="text-sm text-gray-700 select-none"
+                    >
+                      {status}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition shadow-md disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />{" "}
+                    Reassigning...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw size={16} className="mr-2" /> Reassign
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -354,63 +372,134 @@ const RejectionPromptModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center transition-opacity"
-      onClick={onClose}>
+      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 transition-opacity"
+      onClick={onClose}
+    >
       <div
-        className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6"
-        onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 className="text-xl font-bold text-gray-900 flex items-center">
-            <Slash className="w-5 h-5 mr-2 text-red-600" /> Confirm Rejection
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
-            <X size={20} />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Please provide a brief reason for rejecting this appointment.
-          </p>
-          <div>
-            <textarea
-              id="rejection-reason"
-              rows="3"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-red-500 focus:border-red-500 text-sm"
-              placeholder="e.g., Conflicting schedule, security risk, missing documents..."
-              required
-            />
-          </div>
-          <div className="pt-2 flex justify-end space-x-3">
+        className="bg-white rounded-xl shadow-2xl w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center border-b pb-3 mb-4">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+              <Slash className="w-5 h-5 mr-2 text-red-600" /> Confirm Rejection
+            </h2>
             <button
-              type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
-              disabled={isLoading}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-md disabled:opacity-50"
-              disabled={isLoading || reason.trim() === ""}>
-              {isLoading ? (
-                <>
-                  <Loader2 size={16} className="mr-2 animate-spin" />{" "}
-                  Rejecting...
-                </>
-              ) : (
-                <>
-                  <Slash size={16} className="mr-2" /> Reject Appointment
-                </>
-              )}
+              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100"
+            >
+              <X size={20} />
             </button>
           </div>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Please provide a brief reason for rejecting this appointment.
+            </p>
+            <div>
+              <textarea
+                id="rejection-reason"
+                rows="3"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2 focus:ring-red-500 focus:border-red-500 text-sm"
+                placeholder="e.g., Conflicting schedule, security risk, missing documents..."
+                required
+              />
+            </div>
+            <div className="pt-2 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
+                disabled={isLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-md disabled:opacity-50"
+                disabled={isLoading || reason.trim() === ""}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={16} className="mr-2 animate-spin" />{" "}
+                    Rejecting...
+                  </>
+                ) : (
+                  <>
+                    <Slash size={16} className="mr-2" /> Reject Appointment
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
+  );
+};
+
+// --- Custom Material Input Component (FIXED: State is now isolated here) ---
+
+const CustomMaterialInput = ({
+  currentMaterials,
+  updateMaterials,
+  showToast,
+}) => {
+  const [customMaterialText, setCustomMaterialText] = useState("");
+
+  const handleAddCustomMaterial = useCallback(
+    (e) => {
+      e.preventDefault();
+      const material = customMaterialText.trim();
+      if (!material) {
+        showToast("Please enter a material name.", "info");
+        return;
+      }
+
+      const normalizedMaterial = normalizeMaterial(material);
+
+      // Check if the normalized material already exists in the current list
+      const isDuplicate = currentMaterials.some(
+        (m) => normalizeMaterial(m) === normalizedMaterial
+      );
+      if (isDuplicate) {
+        showToast(`"${material}" (or similar) is already listed.`, "info");
+        setCustomMaterialText(""); // Clear on error, not on every render
+        return;
+      }
+
+      // Add the new material (preserving its custom casing)
+      const newMaterials = [...currentMaterials, material];
+      updateMaterials(newMaterials);
+      setCustomMaterialText(""); // Clear on successful add
+    },
+    [customMaterialText, currentMaterials, showToast, updateMaterials]
+  );
+
+  return (
+    <form onSubmit={handleAddCustomMaterial} className="space-y-2 pt-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Add Custom Material
+      </label>
+      <div className="flex space-x-2">
+        <input
+          type="text"
+          value={customMaterialText}
+          onChange={(e) => setCustomMaterialText(e.target.value)}
+          placeholder="e.g., Tablet, Sketchpad"
+          className="flex-grow border border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+        />
+        <button
+          type="submit"
+          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm disabled:opacity-50 flex-shrink-0"
+          disabled={!customMaterialText.trim()}
+        >
+          <Plus size={16} className="sm:mr-1" />{" "}
+          <span className="hidden sm:inline">Add</span>
+        </button>
+      </div>
+    </form>
   );
 };
 
@@ -435,7 +524,7 @@ export default function PendingAppointmentsPage() {
 
   const token = useMemo(() => localStorage.getItem(ACCESS_TOKEN_KEY), []);
   const selectedAppointment = appointments.find(
-    (appt) => appt.id === expandedId,
+    (appt) => appt.id === expandedId
   );
 
   // Helper to update the approval configuration for a specific appointment ID
@@ -482,7 +571,7 @@ export default function PendingAppointmentsPage() {
       console.error(err);
       setFetchError(
         err.message ||
-          "An unexpected error occurred while fetching appointments.",
+          "An unexpected error occurred while fetching appointments."
       );
       showToast("Failed to load appointments.", "error");
     } finally {
@@ -517,7 +606,7 @@ export default function PendingAppointmentsPage() {
     if (config.materials.length === 0 && config.inspection === "Not Required") {
       showToast(
         "Please configure allowed materials and inspection status before approving.",
-        "info",
+        "info"
       );
       return;
     }
@@ -525,7 +614,7 @@ export default function PendingAppointmentsPage() {
     // Custom confirmation UI logic (using native confirm as it's the expected interaction pattern for this environment)
     if (
       !window.confirm(
-        `Are you sure you want to APPROVE this appointment with the selected settings?`,
+        `Are you sure you want to APPROVE this appointment with the selected settings?`
       )
     )
       return;
@@ -563,7 +652,7 @@ export default function PendingAppointmentsPage() {
       console.error("Approval error:", err);
       showToast(
         `Error approving appointment: ${err.message || "Check console."}`,
-        "error",
+        "error"
       );
     } finally {
       setActionLoading(null);
@@ -595,14 +684,14 @@ export default function PendingAppointmentsPage() {
         throw new Error(errorMessage);
       }
 
-      // showToast("Appointment rejected successfully!", "success");
+      showToast("Appointment rejected successfully!", "success");
       fetchAppointments();
       setExpandedId(null);
     } catch (err) {
       console.error("Rejection error:", err);
       showToast(
         `Error rejecting appointment: ${err.message || "Check console."}`,
-        "error",
+        "error"
       );
     } finally {
       setActionLoading(null);
@@ -616,7 +705,7 @@ export default function PendingAppointmentsPage() {
     // Custom confirmation
     if (
       !window.confirm(
-        `Confirm reassigning appointment to ${reassignData.reassignedDate}?`,
+        `Confirm reassigning appointment to ${reassignData.reassignedDate}?`
       )
     ) {
       setActionLoading(null);
@@ -633,7 +722,7 @@ export default function PendingAppointmentsPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(reassignData),
-        },
+        }
       );
       if (!res.ok) throw new Error("Failed to reassign appointment.");
 
@@ -645,7 +734,7 @@ export default function PendingAppointmentsPage() {
       console.error("Reassign error:", err);
       showToast(
         `Error reassigning appointment: ${err.message || "Check console."}`,
-        "error",
+        "error"
       );
     } finally {
       setActionLoading(null);
@@ -664,71 +753,72 @@ export default function PendingAppointmentsPage() {
       materials: [],
       inspection: "Not Required",
     };
-    // New state for custom material input
-    const [customMaterialText, setCustomMaterialText] = useState("");
+    const currentMaterials = config.materials || [];
 
+    // Use a memoized set of normalized allowed options for efficient comparison
+    const normalizedAllowedOptions = useMemo(
+      () => new Set(allowedOptions.map(normalizeMaterial)),
+      []
+    );
+
+    // Handler passed to the custom input component to update the main state
+    const updateMaterialsInConfig = useCallback(
+      (newMaterials) => {
+        updateApprovalConfig(appt.id, "materials", newMaterials);
+      },
+      [appt.id, updateApprovalConfig]
+    );
+
+    /**
+     * Handles changes for fixed material checkboxes.
+     * Uses normalized names for robust, case-insensitive removal.
+     */
     const handleMaterialChange = (e) => {
-      const material = e.target.value;
+      const material = e.target.value; // e.g., "Laptop"
       const isChecked = e.target.checked;
+      const normalizedMaterial = normalizeMaterial(material);
+
       const newMaterials = isChecked
-        ? [...config.materials, material]
-        : config.materials.filter((m) => m !== material);
-      updateApprovalConfig(appt.id, "materials", newMaterials);
+        ? // Add the material (using original casing from allowedOptions)
+          [...currentMaterials, material]
+        : // Remove the material, checking by normalized name
+          currentMaterials.filter(
+            (m) => normalizeMaterial(m) !== normalizedMaterial
+          );
+
+      updateMaterialsInConfig(newMaterials);
     };
 
+    /**
+     * Handles removing custom materials from the chips.
+     */
     const handleRemoveCustomMaterial = (materialToRemove) => {
-      const newMaterials = config.materials.filter(
-        (m) => m !== materialToRemove,
+      const normalizedMaterialToRemove = normalizeMaterial(materialToRemove);
+
+      const newMaterials = currentMaterials.filter(
+        (m) => normalizeMaterial(m) !== normalizedMaterialToRemove
       );
-      updateApprovalConfig(appt.id, "materials", newMaterials);
-      // showToast(`Removed custom material: ${materialToRemove}`, "info");
-    };
-
-    const handleAddCustomMaterial = (e) => {
-      e.preventDefault();
-      const material = customMaterialText.trim();
-      if (!material) {
-        showToast("Please enter a material name.", "info");
-        return;
-      }
-
-      const normalizedMaterial = material.toLowerCase();
-
-      // Check if material is already included (case-insensitive check against current list)
-      if (
-        config.materials
-          .map((m) => m.toLowerCase())
-          .includes(normalizedMaterial)
-      ) {
-        showToast(`"${material}" is already listed.`, "info");
-        setCustomMaterialText("");
-        return;
-      }
-
-      // Add the new material (preserving original casing)
-      const newMaterials = [...config.materials, material];
-      updateApprovalConfig(appt.id, "materials", newMaterials);
-      setCustomMaterialText("");
-      // showToast(`Added custom material: ${material}`, "success");
+      updateMaterialsInConfig(newMaterials);
     };
 
     // Filter out fixed options to only show custom added ones as chips
-    const customMaterials = config.materials.filter(
-      (m) => !allowedOptions.includes(m),
+    const customMaterials = currentMaterials.filter(
+      (m) => !normalizedAllowedOptions.has(normalizeMaterial(m))
     );
 
     return (
       <td
         colSpan="6"
-        className="p-6 bg-gray-50 border-t border-gray-200 shadow-inner">
-        <div className="flex flex-col lg:flex-row gap-8">
+        className="p-4 sm:p-6 bg-gray-50 border-t border-gray-200 shadow-inner"
+      >
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Appointment/Customer Details */}
-          <div className="flex-1 space-y-4 pr-6 border-r border-gray-200">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
+          <div className="flex-1 space-y-4 lg:pr-6 lg:border-r border-gray-200">
+            <h3 className="text-base sm:text-lg font-bold text-gray-800 flex items-center mb-4">
               <User size={18} className="mr-2 text-blue-600" /> Customer &
               Appointment Info
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <DetailItem
                 label="Full Name"
                 value={`${appt.customer?.firstName || ""} ${
@@ -779,8 +869,8 @@ export default function PendingAppointmentsPage() {
           </div>
 
           {/* Security & Action Controls */}
-          <div className="flex-1 space-y-4 pl-6">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center mb-4">
+          <div className="flex-1 space-y-4 lg:pl-6 pt-6 lg:pt-0">
+            <h3 className="text-base sm:text-lg font-bold text-gray-800 flex items-center mb-4">
               <ShieldCheck size={18} className="mr-2 text-green-600" /> Security
               Configuration
             </h3>
@@ -790,20 +880,24 @@ export default function PendingAppointmentsPage() {
               <label className="block text-sm font-medium text-gray-700">
                 Fixed Allowed Materials
               </label>
-              <div className="grid grid-cols-2 gap-2 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <div className="grid grid-cols-2 gap-3 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
                 {allowedOptions.map((opt) => (
                   <div key={opt} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id={`material-${appt.id}-${opt}`}
                       value={opt}
-                      checked={config.materials.includes(opt)}
+                      // Use normalized comparison for checked status
+                      checked={currentMaterials.some(
+                        (m) => normalizeMaterial(m) === normalizeMaterial(opt)
+                      )}
                       onChange={handleMaterialChange}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <label
                       htmlFor={`material-${appt.id}-${opt}`}
-                      className="text-sm text-gray-700 select-none">
+                      className="text-sm text-gray-700 select-none"
+                    >
                       {opt}
                     </label>
                   </div>
@@ -811,27 +905,12 @@ export default function PendingAppointmentsPage() {
               </div>
             </div>
 
-            {/* Custom Material Input */}
-            <form onSubmit={handleAddCustomMaterial} className="space-y-2 pt-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Add Custom Material
-              </label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={customMaterialText}
-                  onChange={(e) => setCustomMaterialText(e.target.value)}
-                  placeholder="e.g., Tablet, Sketchpad, Drone"
-                  className="flex-grow border border-gray-300 rounded-lg shadow-sm p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-                <button
-                  type="submit"
-                  className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm disabled:opacity-50"
-                  disabled={!customMaterialText.trim()}>
-                  <Plus size={16} className="mr-1" /> Add
-                </button>
-              </div>
-            </form>
+            {/* Custom Material Input (FIXED: State is now isolated here) */}
+            <CustomMaterialInput
+              currentMaterials={currentMaterials}
+              updateMaterials={updateMaterialsInConfig}
+              showToast={showToast}
+            />
 
             {/* Display Custom Materials */}
             {customMaterials.length > 0 && (
@@ -845,7 +924,8 @@ export default function PendingAppointmentsPage() {
                       key={material}
                       className="inline-flex items-center px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full cursor-pointer hover:bg-purple-200 transition"
                       onClick={() => handleRemoveCustomMaterial(material)}
-                      title="Click to remove">
+                      title="Click to remove"
+                    >
                       {material}
                       <Trash2 size={12} className="ml-1 text-purple-600" />
                     </span>
@@ -872,14 +952,15 @@ export default function PendingAppointmentsPage() {
                         updateApprovalConfig(
                           appt.id,
                           "inspection",
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <label
                       htmlFor={`security-${appt.id}-${status}`}
-                      className="text-sm text-gray-700 select-none">
+                      className="text-sm text-gray-700 select-none"
+                    >
                       {status}
                     </label>
                   </div>
@@ -887,12 +968,13 @@ export default function PendingAppointmentsPage() {
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="pt-4 flex space-x-3 justify-end">
+            {/* Action Buttons (Responsive) */}
+            <div className="pt-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
               <button
                 onClick={() => handleApprove(appt)}
                 disabled={actionLoading === appt.id}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50">
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
+              >
                 {actionLoading === appt.id ? (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 ) : (
@@ -904,7 +986,8 @@ export default function PendingAppointmentsPage() {
                 // Opens the Rejection Prompt Modal
                 onClick={() => openRejectPrompt(appt.id)}
                 disabled={actionLoading === appt.id}
-                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md disabled:opacity-50">
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
+              >
                 {actionLoading === appt.id ? (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 ) : (
@@ -915,7 +998,8 @@ export default function PendingAppointmentsPage() {
               <button
                 onClick={() => setIsReassignModalOpen(true)}
                 disabled={actionLoading !== null} // Disable all actions if one is pending
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold shadow-md disabled:opacity-50">
+                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
+              >
                 <RotateCcw size={16} className="mr-2" /> Reassign
               </button>
             </div>
@@ -926,21 +1010,36 @@ export default function PendingAppointmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50  ">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <Clock className="inline w-6 h-6 mr-2 text-blue-600" /> Pending
+        Appointments
+        <button
+          onClick={fetchAppointments}
+          disabled={isListLoading}
+          className="ml-4 p-1 rounded-full text-gray-500 hover:text-blue-600 transition disabled:opacity-50"
+        >
+          <RefreshCw
+            size={18}
+            className={isListLoading ? "animate-spin" : ""}
+          />
+        </button>
+      </h1>
+
       {fetchError && (
-        <div className="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg flex items-center">
-          <AlertTriangle size={20} className="mr-2" />
+        <div className="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg flex items-center border border-red-200">
+          <AlertTriangle size={20} className="mr-2 flex-shrink-0" />
           {fetchError}
         </div>
       )}
 
       {isListLoading ? (
-        <div className="text-center p-10 text-gray-600 flex items-center justify-center">
+        <div className="text-center p-10 text-gray-600 flex items-center justify-center bg-white rounded-xl shadow-lg">
           <Loader2 size={24} className="mr-2 animate-spin" /> Loading pending
           appointments...
         </div>
       ) : appointments.length === 0 ? (
-        <div className="text-center p-10 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
+        <div className="text-center p-10 text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-white shadow-sm">
           <Info size={30} className="mx-auto text-gray-400 mb-3" />
           <p className="text-lg font-medium">No pending appointments found.</p>
         </div>
@@ -958,10 +1057,10 @@ export default function PendingAppointmentsPage() {
                 <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
                   Email
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden sm:table-cell">
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden md:table-cell">
                   Date
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden sm:table-cell">
                   Status
                 </th>
                 <th className="py-3 px-4 text-right text-xs font-bold text-gray-600 uppercase w-1">
@@ -974,20 +1073,21 @@ export default function PendingAppointmentsPage() {
                 <React.Fragment key={appt.id}>
                   <tr
                     className="hover:bg-gray-50 cursor-pointer transition duration-150"
-                    onClick={() => handleToggleExpand(appt.id)}>
-                    <td className="py-3 px-4 text-sm font-medium text-gray-500">
+                    onClick={() => handleToggleExpand(appt.id)}
+                  >
+                    <td className="py-3 px-4 text-sm font-medium text-gray-500 whitespace-nowrap">
                       {index + 1}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-gray-900">
+                    <td className="py-3 px-4 font-semibold text-gray-900 whitespace-nowrap">
                       {appt.customer?.firstName} {appt.customer?.lastName}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600">
+                    <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap">
                       {appt.customer?.email}
                     </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 hidden sm:table-cell">
+                    <td className="py-3 px-4 text-sm text-gray-600 whitespace-nowrap hidden md:table-cell">
                       {appt.reassignedDate || appt.appointmentDate}
                     </td>
-                    <td className="py-3 px-4 text-sm capitalize">
+                    <td className="py-3 px-4 text-sm capitalize hidden sm:table-cell">
                       <span className="inline-flex items-center px-3 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full shadow-sm">
                         <Clock size={12} className="mr-1" />
                         {appt.status}
@@ -1000,7 +1100,8 @@ export default function PendingAppointmentsPage() {
                           expandedId === appt.id
                             ? "Collapse Details"
                             : "Expand Details"
-                        }>
+                        }
+                      >
                         {expandedId === appt.id ? (
                           <ChevronUp size={18} />
                         ) : (
@@ -1041,7 +1142,6 @@ export default function PendingAppointmentsPage() {
         isLoading={actionLoading === currentApptToRejectId}
       />
 
-      {/* Global Toast Notification */}
       <Toast
         message={toast.message}
         type={toast.type}

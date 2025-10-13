@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const hours = Array.from({ length: 12 }, (_, i) =>
-  String(i + 1).padStart(2, "0"),
+  String(i + 1).padStart(2, "0")
 );
 const minutes = Array.from({ length: 12 }, (_, i) =>
-  String(i * 5).padStart(2, "0"),
+  String(i * 5).padStart(2, "0")
 );
 
 function to24HourString(hour12, minute, period) {
@@ -45,19 +45,20 @@ const FormInput = ({
       onChange={onChange}
       placeholder={placeholder}
       required={required}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
     />
   </div>
 );
 
-// Time group for start/end
+// Time group component
 const TimeSelectGroup = ({ formData, handleChange, namePrefix }) => (
-  <div className="flex items-center">
+  <div className="flex items-center w-full">
     <select
       name={`${namePrefix}Hour`}
       value={formData[`${namePrefix}Hour`]}
       onChange={handleChange}
-      className="w-1/3 border border-gray-300 rounded-l-lg px-1 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+      className="w-1/3 border border-gray-300 rounded-l-lg px-2 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
+    >
       {hours.map((h) => (
         <option key={h} value={h}>
           {h}
@@ -71,7 +72,8 @@ const TimeSelectGroup = ({ formData, handleChange, namePrefix }) => (
       name={`${namePrefix}Minute`}
       value={formData[`${namePrefix}Minute`]}
       onChange={handleChange}
-      className="w-1/3 border border-gray-300 -ml-px px-1 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none">
+      className="w-1/3 border border-gray-300 -ml-px px-2 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
+    >
       {minutes.map((m) => (
         <option key={m} value={m}>
           {m}
@@ -83,7 +85,8 @@ const TimeSelectGroup = ({ formData, handleChange, namePrefix }) => (
       name={`${namePrefix}Period`}
       value={formData[`${namePrefix}Period`]}
       onChange={handleChange}
-      className="w-1/3 border border-gray-300 rounded-r-lg -ml-px px-2 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500 outline-none">
+      className="w-1/3 border border-gray-300 rounded-r-lg -ml-px px-2 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500 outline-none"
+    >
       <option>AM</option>
       <option>PM</option>
     </select>
@@ -112,10 +115,11 @@ export default function AppointmentForm() {
     plateNumber: "",
     purpose: "",
   });
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState(""); // "success" or "error"
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,18 +132,19 @@ export default function AppointmentForm() {
     const start24 = to24HourString(
       formData.startHour,
       formData.startMinute,
-      formData.startPeriod,
+      formData.startPeriod
     );
     const end24 = to24HourString(
       formData.endHour,
       formData.endMinute,
-      formData.endPeriod,
+      formData.endPeriod
     );
 
     const [sH, sM] = start24.split(":");
     const [eH, eM] = end24.split(":");
     if (toMinutesSinceMidnight(sH, sM) >= toMinutesSinceMidnight(eH, eM)) {
-      alert("End time must be after start time.");
+      setMessage("End time must be after start time.");
+      setMessageType("error");
       return;
     }
 
@@ -164,13 +169,14 @@ export default function AppointmentForm() {
     try {
       setLoading(true);
       setMessage("");
+      setMessageType("");
 
       const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:3000/requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // 👈 attach token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -180,10 +186,11 @@ export default function AppointmentForm() {
         throw new Error(errData || "Failed to create appointment");
       }
 
-      const data = await res.json();
-      navigate("/create");
-      console.log("Server response:", data);
+      await res.json();
+      setMessage("Appointment created successfully!");
+      setMessageType("success");
 
+      // Reset form
       setFormData({
         firstName: "",
         middleName: "",
@@ -205,34 +212,38 @@ export default function AppointmentForm() {
         plateNumber: "",
         purpose: "",
       });
+
+      setTimeout(() => navigate("/create"), 1200);
     } catch (error) {
       console.error("Error submitting form:", error);
-      setMessage("❌ Failed to create appointment. Please try again.");
+      setMessage("Failed to create appointment. Please try again.");
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 ">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-2 sm:px-4">
+      <div className="bg-white rounded-lg shadow-md w-full max-w-2xl p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
           Create New Appointment
         </h2>
 
         {message && (
           <div
-            className={`text-sm mb-4 px-3 py-2 rounded ${
-              message.startsWith("✅")
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}>
+            className={`text-sm mb-4 px-3 py-2 rounded border ${
+              messageType === "success"
+                ? "bg-green-50 text-green-700 border-green-300"
+                : "bg-red-50 text-red-700 border-red-300"
+            }`}
+          >
             {message}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Row 1: First, Middle, Last Name */}
+          {/* Row 1: Names */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormInput
               label="First Name"
@@ -283,7 +294,8 @@ export default function AppointmentForm() {
                 {["Female", "Male"].map((g) => (
                   <label
                     key={g}
-                    className="flex items-center text-sm text-gray-700">
+                    className="flex items-center text-sm text-gray-700"
+                  >
                     <input
                       type="radio"
                       name="gender"
@@ -324,7 +336,7 @@ export default function AppointmentForm() {
             />
           </div>
 
-          {/* Organization & Occupation (occupation is required now) */}
+          {/* Organization & Occupation */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormInput
               label="Organization"
@@ -398,7 +410,8 @@ export default function AppointmentForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-70">
+            className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-70"
+          >
             {loading ? "Creating..." : "Create Appointment"}
           </button>
         </form>
