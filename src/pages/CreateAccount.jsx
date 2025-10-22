@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// Placeholder for the base URL. In a real project, this would be imported from a config file.
+
 const API_BASE_URL = "http://localhost:3000";
 // const API_BASE_URL = import.meta.env.API_BASE_URL;
 
-const ACCESS_TOKEN_KEY = "token"; // <--- CORRECTED KEY to match the Login component
+const ACCESS_TOKEN_KEY = "token"; 
 
-// Utility to format canonical role keys (e.g., 'FRONT_DESK') to display names ("Front Desk")
 const formatRoleKey = (key) => {
   if (!key) return "";
   return key
@@ -16,7 +15,7 @@ const formatRoleKey = (key) => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
-// Component to handle notification messages without using alert()
+
 const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 
@@ -41,29 +40,28 @@ const Notification = ({ message, type, onClose }) => {
 
 const CreateAccount = () => {
   const navigate = useNavigate();
-  // State for all form fields. 'role' stores the canonical key (e.g., 'FRONT_DESK')
+  
   const [formData, setFormData] = useState({
     firstName: "",
     middleName: "",
     lastName: "",
     email: "",
-    role: "", // Stores the canonical key for API submission
+    role: "",
     password: "",
   });
 
-  // UI state
+ 
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
-  // State for dynamically loaded roles (stores { key: 'FRONT_DESK', display: 'Front Desk' })
   const [availableRoles, setAvailableRoles] = useState([]);
   const [selectedRoleDisplay, setSelectedRoleDisplay] = useState("Select Role");
   const [rolesError, setRolesError] = useState("");
 
-  // Function to fetch roles with exponential backoff and retry logic
+
   const fetchRoles = useCallback(async (retries = 3) => {
-    // Note: The hardcoded list is only a fallback and does not contain CEO
+    
     const canonicalRoles = ["FRONT_DESK", "SECRETARY", "SECURITY"];
     setRolesError("");
 
@@ -79,13 +77,11 @@ const CreateAccount = () => {
 
         const rolesData = await response.json();
 
-        // Map the data into the { key: canonical_name, display: friendly_name } format
         const formattedRoles = rolesData.map((role) => ({
-          key: role.name, // Assuming the API returns a 'name' property with the canonical key
+          key: role.name,
           display: formatRoleKey(role.name),
         }));
 
-        // FILTER: Remove the 'CEO' role from the list before setting state
         const filteredRoles = formattedRoles.filter(
           (role) => role.key !== "CEO",
         );
@@ -98,7 +94,7 @@ const CreateAccount = () => {
           const delay = Math.pow(2, i) * 1000;
           await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
-          // Final attempt failed, use hardcoded canonical roles as a last resort
+          
           const fallbackRoles = canonicalRoles.map((key) => ({
             key: key,
             display: formatRoleKey(key),
@@ -122,10 +118,7 @@ const CreateAccount = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  /**
-   * Handles role selection by storing the canonical KEY (for API)
-   * and setting the DISPLAY name (for UI).
-   */
+  
   const handleSelect = (key, display) => {
     setFormData({ ...formData, role: key }); // Store the canonical key
     setSelectedRoleDisplay(display); // Store the display name for the UI
@@ -182,7 +175,6 @@ const CreateAccount = () => {
       role: formData.role,
     };
 
-    // Prepare headers: Token is included for staff creation
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -204,7 +196,7 @@ const CreateAccount = () => {
           type: "success",
         });
 
-        // Reset form
+      
         setFormData({
           firstName: "",
           middleName: "",
@@ -232,8 +224,8 @@ const CreateAccount = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8 border border-gray-200">
+    <div className="min-h-screen flex items-center justify-center  bg-gradient-to-br from-indigo-50 via-white to-purple-50 ">
+      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-4 border border-gray-200">
         <h2 className="text-2xl  text-center text-gray-800 mb-8">
           Create User
         </h2>
@@ -241,7 +233,8 @@ const CreateAccount = () => {
         {rolesError && (
           <div
             className="p-3 mb-4 text-sm text-yellow-800 bg-yellow-100 rounded-lg"
-            role="alert">
+            role="alert"
+          >
             {rolesError}
           </div>
         )}
@@ -320,11 +313,13 @@ const CreateAccount = () => {
               } rounded-lg px-4 py-2.5 cursor-pointer transition duration-150 focus-within:ring-2 focus-within:ring-blue-500 shadow-sm`}
               onClick={() => setShowDropdown(!showDropdown)}
               role="button"
-              tabIndex="0">
+              tabIndex="0"
+            >
               <span
                 className={
                   formData.role ? "text-gray-900 font-medium" : "text-gray-500"
-                }>
+                }
+              >
                 {selectedRoleDisplay}
               </span>
               <ChevronDown
@@ -341,7 +336,8 @@ const CreateAccount = () => {
                   <li
                     key={key}
                     onClick={() => handleSelect(key, display)}
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-gray-800 transition duration-100">
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-gray-800 transition duration-100"
+                  >
                     {display}
                   </li>
                 ))}
@@ -373,7 +369,8 @@ const CreateAccount = () => {
               loading
                 ? "bg-blue-400 cursor-not-allowed"
                 : "bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl"
-            } text-white rounded-xl py-3 font-bold transition-all duration-300 mt-6`}>
+            } text-white rounded-xl py-3 font-bold transition-all duration-300 mt-6`}
+          >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />

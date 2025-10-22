@@ -9,7 +9,7 @@ export default function Layout({ children }) {
 
       {/* Push content below fixed navbar */}
       <div className="pt-16 flex flex-col min-h-screen">
-        <TopTabs />
+        {/* <TopTabs /> */}
         <main className="p-6 flex-1">{children}</main>
       </div>
     </div>

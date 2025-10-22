@@ -1,6 +1,19 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// Icons for visual appeal
+import {
+  FiCalendar,
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiBriefcase,
+  FiSend,
+  FiAlertCircle,
+  FiCheckCircle,
+} from "react-icons/fi";
 
+// --- Time Helpers (Unchanged Logic) --------------------------------------------
 const hours = Array.from({ length: 12 }, (_, i) =>
   String(i + 1).padStart(2, "0")
 );
@@ -24,7 +37,7 @@ function toMinutesSinceMidnight(hour24Str, minuteStr) {
   return h * 60 + m;
 }
 
-// Reusable input component
+// --- Reusable Input Component (Slightly Reduced Padding) ------------------------------------
 const FormInput = ({
   label,
   name,
@@ -33,66 +46,86 @@ const FormInput = ({
   onChange,
   placeholder,
   required = true,
+  icon: Icon,
 }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
+  <div className="relative">
+    <label className="block text-xs font-semibold uppercase text-gray-600 mb-1 tracking-wider">
       {label} {required && <span className="text-red-500">*</span>}
     </label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      required={required}
-      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out"
-    />
+    <div className="relative flex items-center">
+      {Icon && (
+        <span className="absolute left-3 text-gray-400 pointer-events-none">
+          <Icon className="w-4 h-4" />
+        </span>
+      )}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+        required={required}
+        // Reduced py-2 to py-1.5 for compactness, kept px-4 for readability
+        className={`w-full border border-gray-300 rounded-lg px-4 py-1.5 text-sm placeholder-gray-400 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm ${
+          Icon ? "pl-9" : "pl-4"
+        }`}
+      />
+    </div>
   </div>
 );
 
-// Time group component
-const TimeSelectGroup = ({ formData, handleChange, namePrefix }) => (
-  <div className="flex items-center w-full">
-    <select
-      name={`${namePrefix}Hour`}
-      value={formData[`${namePrefix}Hour`]}
-      onChange={handleChange}
-      className="w-1/3 border border-gray-300 rounded-l-lg px-2 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
-    >
-      {hours.map((h) => (
-        <option key={h} value={h}>
-          {h}
-        </option>
-      ))}
-    </select>
+// --- Time Group Component (Reduced Padding and Margin) ----------------------------------------
+const TimeSelectGroup = ({ formData, handleChange, namePrefix, label }) => (
+  <div className="w-full">
+    <label className="block text-xs font-semibold uppercase text-gray-600 mb-1 tracking-wider">
+      {label} <span className="text-red-500">*</span>
+    </label>
+    <div className="flex items-center w-full border border-gray-300 rounded-lg shadow-sm overflow-hidden h-[34px]">
+      <select
+        name={`${namePrefix}Hour`}
+        value={formData[`${namePrefix}Hour`]}
+        onChange={handleChange}
+        // Reduced py-2 to py-1 for compactness
+        className="w-1/3 px-2 py-1 text-sm bg-white focus:ring-0 focus:border-none outline-none appearance-none cursor-pointer"
+      >
+        {hours.map((h) => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
 
-    <span className="text-gray-500 font-semibold px-1">:</span>
+      <span className="text-gray-500 font-bold text-xs">:</span>
 
-    <select
-      name={`${namePrefix}Minute`}
-      value={formData[`${namePrefix}Minute`]}
-      onChange={handleChange}
-      className="w-1/3 border border-gray-300 -ml-px px-2 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none"
-    >
-      {minutes.map((m) => (
-        <option key={m} value={m}>
-          {m}
-        </option>
-      ))}
-    </select>
+      <select
+        name={`${namePrefix}Minute`}
+        value={formData[`${namePrefix}Minute`]}
+        onChange={handleChange}
+        // Reduced py-2 to py-1 for compactness
+        className="w-1/3 px-2 py-1 text-sm bg-white focus:ring-0 focus:border-none outline-none appearance-none cursor-pointer border-l border-r border-gray-200"
+      >
+        {minutes.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
 
-    <select
-      name={`${namePrefix}Period`}
-      value={formData[`${namePrefix}Period`]}
-      onChange={handleChange}
-      className="w-1/3 border border-gray-300 rounded-r-lg -ml-px px-2 py-2 text-sm bg-white focus:ring-blue-500 focus:border-blue-500 outline-none"
-    >
-      <option>AM</option>
-      <option>PM</option>
-    </select>
+      <select
+        name={`${namePrefix}Period`}
+        value={formData[`${namePrefix}Period`]}
+        onChange={handleChange}
+        // Reduced py-2 to py-1 for compactness
+        className="w-1/3 px-2 py-1 text-xs bg-blue-50 text-blue-700 font-semibold focus:ring-0 focus:border-none outline-none appearance-none cursor-pointer"
+      >
+        <option>AM</option>
+        <option>PM</option>
+      </select>
+    </div>
   </div>
 );
 
+// --- Main Form Component (Compacted Layout) ------------------------------
 export default function AppointmentForm() {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -119,7 +152,7 @@ export default function AppointmentForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); // "success" or "error"
+  const [messageType, setMessageType] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -187,7 +220,7 @@ export default function AppointmentForm() {
       }
 
       await res.json();
-      setMessage("Appointment created successfully!");
+      setMessage("Appointment created successfully! Redirecting...");
       setMessageType("success");
 
       // Reset form
@@ -216,7 +249,9 @@ export default function AppointmentForm() {
       setTimeout(() => navigate("/create"), 1200);
     } catch (error) {
       console.error("Error submitting form:", error);
-      setMessage("Failed to create appointment. Please try again.");
+      setMessage(
+        "Failed to create appointment. Please check the details and try again."
+      );
       setMessageType("error");
     } finally {
       setLoading(false);
@@ -224,195 +259,259 @@ export default function AppointmentForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-2 sm:px-4">
-      <div className="bg-white rounded-lg shadow-md w-full max-w-2xl p-4 sm:p-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 border-b pb-2">
-          Create New Appointment
-        </h2>
+    // Max width reduced for a more compact form feel, still using the nice BG
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 pb-1 sm:p-4 relative overflow-hidden">
+      {/* Decorative Background Circles (Kept for visual interest) */}
+      <div className="absolute top-[-100px] right-[-100px] w-64 h-64 bg-blue-10 rounded-full opacity-30 blur-3xl mix-blend-multiply animate-pulse"></div>
+      <div className="absolute bottom-[-150px] left-[-150px] w-80 h-80 bg-indigo-200 rounded-full opacity-30 blur-3xl mix-blend-multiply animate-pulse animation-delay-500"></div>
 
+      {/* Max-width reduced from 4xl to 2xl, padding reduced from p-10 to p-6 */}
+      <div className=" bg-white rounded-2xl shadow-xl w-full max-w-2xl pb-2 sm:p-4 z-10">
+        {/* <header className="text-center "> */}
+          <h2 className="text-2xl font-extrabold text-gray-900 mb-2 text-center">
+            Create Appointment
+          </h2>
+         
+        {/* </header> */}
+
+        {/* Message Alert Component */}
         {message && (
           <div
-            className={`text-sm mb-4 px-3 py-2 rounded border ${
+            className={`flex items-center text-sm mb-4 px-3 py-2 rounded-lg border-l-4 ${
               messageType === "success"
-                ? "bg-green-50 text-green-700 border-green-300"
-                : "bg-red-50 text-red-700 border-red-300"
+                ? "bg-green-50 text-green-700 border-green-500"
+                : "bg-red-50 text-red-700 border-red-500"
             }`}
           >
-            {message}
+            {messageType === "success" ? (
+              <FiCheckCircle className="w-4 h-4 mr-2" />
+            ) : (
+              <FiAlertCircle className="w-4 h-4 mr-2" />
+            )}
+            <span className="font-medium">{message}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Row 1: Names */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <FormInput
-              label="First Name"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-            />
-            <FormInput
-              label="Middle Name"
-              name="middleName"
-              value={formData.middleName}
-              onChange={handleChange}
-              required={false}
-            />
-            <FormInput
-              label="Last Name"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-            />
-          </div>
+          {/* PERSONAL INFORMATION SECTION */}
+          {/* Reduced padding from p-6 to p-4, smaller gap */}
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h3 className="text-base font-bold text-gray-800 flex items-center pb-2 border-b border-gray-200">
+              <FiUser className="w-4 h-4 mr-2 text-blue-500" />
+              Personal Details
+            </h3>
 
-          {/* Row 2 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <FormInput
-              label="Phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Gender & Plate */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gender <span className="text-red-500">*</span>
-              </label>
-              <div className="flex space-x-4">
-                {["Female", "Male"].map((g) => (
-                  <label
-                    key={g}
-                    className="flex items-center text-sm text-gray-700"
-                  >
-                    <input
-                      type="radio"
-                      name="gender"
-                      value={g}
-                      checked={formData.gender === g}
-                      onChange={handleChange}
-                      required
-                      className="text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2"
-                    />
-                    {g}
-                  </label>
-                ))}
+            {/* **COMPACTED LAYOUT: Two columns for most fields** */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              {/* Name fields in one row (3 cols on small screens, condensed into 2 main columns below) */}
+              <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormInput
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  icon={FiUser}
+                />
+                <FormInput
+                  label="Middle Name"
+                  name="middleName"
+                  value={formData.middleName}
+                  onChange={handleChange}
+                  required={false}
+                  icon={FiUser}
+                />
+                <FormInput
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  icon={FiUser}
+                />
               </div>
-            </div>
 
-            <FormInput
-              label="Plate Number"
-              name="plateNumber"
-              value={formData.plateNumber}
-              onChange={handleChange}
-              required={false}
-            />
-          </div>
-
-          {/* Country & City */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Country"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-            />
-            <FormInput
-              label="City"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Organization & Occupation */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Organization"
-              name="organization"
-              value={formData.organization}
-              onChange={handleChange}
-              required={false}
-            />
-            <FormInput
-              label="Occupation"
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-              required={true}
-            />
-          </div>
-
-          {/* Date & Time */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
+              {/* Contact fields in two columns */}
+              <FormInput
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
                 onChange={handleChange}
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500"
+                icon={FiMail}
+              />
+              <FormInput
+                label="Phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                icon={FiPhone}
+              />
+
+              {/* Location fields in two columns */}
+              <FormInput
+                label="Country"
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                icon={FiMapPin}
+              />
+              <FormInput
+                label="City"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                icon={FiMapPin}
+              />
+
+              {/* Organization/Occupation fields in two columns */}
+              <FormInput
+                label="Organization (Optional)"
+                name="organization"
+                value={formData.organization}
+                onChange={handleChange}
+                required={false}
+                icon={FiBriefcase}
+              />
+              <FormInput
+                label="Occupation"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+                icon={FiBriefcase}
+              />
+
+              {/* Gender and Plate fields in two columns */}
+              <div>
+                <label className="block text-xs font-semibold uppercase text-gray-600 mb-1 tracking-wider">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                {/* Reduced height of the radio group */}
+                <div className="flex space-x-6 h-[34px] items-center">
+                  {["Female", "Male"].map((g) => (
+                    <label
+                      key={g}
+                      className="flex items-center text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="gender"
+                        value={g}
+                        checked={formData.gender === g}
+                        onChange={handleChange}
+                        required
+                        className="text-blue-600 focus:ring-blue-500 w-4 h-4 mr-2 border-gray-300"
+                      />
+                      {g}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <FormInput
+                label="Plate Number (Optional)"
+                name="plateNumber"
+                value={formData.plateNumber}
+                onChange={handleChange}
+                required={false}
+                icon={FiBriefcase}
+              />
+            </div>
+          </div>
+
+          {/* APPOINTMENT DETAILS SECTION */}
+          {/* Reduced padding from p-6 to p-4, smaller gap */}
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+            <h3 className="text-base font-bold text-gray-800 flex items-center pb-2 border-b border-gray-200">
+              <FiCalendar className="w-4 h-4 mr-2 text-blue-500" />
+              Appointment Details
+            </h3>
+
+            {/* **Compacted Time Group** */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase text-gray-600 mb-1 tracking-wider">
+                  Date <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                  // Reduced py-2 to py-1.5, rounded-xl to rounded-lg
+                  className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500 shadow-sm"
+                />
+              </div>
+
+              <TimeSelectGroup
+                formData={formData}
+                handleChange={handleChange}
+                namePrefix="start"
+                label="Start Time"
+              />
+              <TimeSelectGroup
+                formData={formData}
+                handleChange={handleChange}
+                namePrefix="end"
+                label="End Time"
               />
             </div>
 
+            {/* Purpose */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Time
+              <label className="block text-xs font-semibold uppercase text-gray-600 mb-1 tracking-wider">
+                Purpose <span className="text-red-500">*</span>
               </label>
-              <div className="flex items-center space-x-2">
-                <TimeSelectGroup
-                  formData={formData}
-                  handleChange={handleChange}
-                  namePrefix="start"
-                />
-                <span className="text-gray-500 text-sm">to</span>
-                <TimeSelectGroup
-                  formData={formData}
-                  handleChange={handleChange}
-                  namePrefix="end"
-                />
-              </div>
+              <textarea
+                name="purpose"
+                value={formData.purpose}
+                onChange={handleChange}
+                rows={3} // Reduced rows from 4 to 3
+                required
+                placeholder="Briefly describe the purpose of the appointment..."
+                // Reduced py-2 to py-1.5, rounded-xl to rounded-lg
+                className="w-full border border-gray-300 rounded-lg px-4 py-1.5 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500 resize-none shadow-sm"
+              />
             </div>
-          </div>
-
-          {/* Purpose */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Purpose <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              name="purpose"
-              value={formData.purpose}
-              onChange={handleChange}
-              rows={3}
-              required
-              placeholder="Briefly describe the purpose of the appointment..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 resize-none"
-            />
           </div>
 
           {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-70"
+            // Reduced py-3 to py-2, text-lg to text-base, rounded-xl to rounded-lg
+            className="w-full flex items-center justify-center bg-blue-600 text-white rounded-lg px-6 py-2 text-base font-bold uppercase tracking-wider hover:bg-blue-700 transition duration-300 ease-in-out shadow-md disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.005]"
           >
-            {loading ? "Creating..." : "Create Appointment"}
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Processing...
+              </>
+            ) : (
+              <>
+                <FiSend className="w-4 h-4 mr-2" />
+                Create Appointment
+              </>
+            )}
           </button>
         </form>
       </div>

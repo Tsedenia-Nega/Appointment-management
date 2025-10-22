@@ -220,7 +220,8 @@ const CloseIcon = () => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className="h-6 w-6 text-gray-500 hover:text-gray-900 transition-colors">
+    className="h-6 w-6 text-gray-500 hover:text-gray-900 transition-colors"
+  >
     <path d="M18 6L6 18M6 6l12 12" />
   </svg>
 );
@@ -364,8 +365,9 @@ const ViewAppointmentModal = ({ appointment, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4 font-sans"
-      onClick={onClose}>
+      className="fixed inset-0  bg-gradient-to-br from-indigo-50 via-white to-purple-50 bg-opacity-75 flex items-center justify-center z-50 p-4 font-sans"
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-4xl bg-white shadow-2xl rounded-xl overflow-hidden transform transition-all"
         onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
@@ -378,7 +380,8 @@ const ViewAppointmentModal = ({ appointment, onClose }) => {
           <button
             onClick={onClose}
             aria-label="Close modal"
-            className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
             <CloseIcon />
           </button>
         </div>
@@ -486,7 +489,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
 
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6"
+      >
         {/* Section 1: Client Details (Inputs unchanged) */}
         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 border-b pb-4">
           {/* <h3 className="md:col-span-2 text-lg font-semibold text-indigo-700 mb-2">
@@ -591,7 +595,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"></input>
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+            ></input>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -601,7 +606,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
               name="city"
               value={formData.city}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"></input>
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+            ></input>
           </div>
 
           {/* NEW: Plate Number Input */}
@@ -679,11 +685,13 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="startHour"
                     value={formData.startHour}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-center">
+                    className="bg-transparent outline-none py-1 text-center"
+                  >
                     {[...Array(12).keys()].map((hour) => (
                       <option
                         key={hour + 1}
-                        value={String(hour + 1).padStart(2, "0")}>
+                        value={String(hour + 1).padStart(2, "0")}
+                      >
                         {String(hour + 1).padStart(2, "0")}
                       </option>
                     ))}
@@ -693,11 +701,13 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="startMinute"
                     value={formData.startMinute}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-center">
+                    className="bg-transparent outline-none py-1 text-center"
+                  >
                     {[0, 15, 30, 45].map((minute) => (
                       <option
                         key={minute}
-                        value={String(minute).padStart(2, "0")}>
+                        value={String(minute).padStart(2, "0")}
+                      >
                         {String(minute).padStart(2, "0")}
                       </option>
                     ))}
@@ -706,7 +716,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="startPeriod"
                     value={formData.startPeriod}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-gray-600 ml-1">
+                    className="bg-transparent outline-none py-1 text-gray-600 ml-1"
+                  >
                     <option>AM</option>
                     <option>PM</option>
                   </select>
@@ -723,11 +734,13 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="endHour"
                     value={formData.endHour}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-center">
+                    className="bg-transparent outline-none py-1 text-center"
+                  >
                     {[...Array(12).keys()].map((hour) => (
                       <option
                         key={hour + 1}
-                        value={String(hour + 1).padStart(2, "0")}>
+                        value={String(hour + 1).padStart(2, "0")}
+                      >
                         {String(hour + 1).padStart(2, "0")}
                       </option>
                     ))}
@@ -737,11 +750,13 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="endMinute"
                     value={formData.endMinute}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-center">
+                    className="bg-transparent outline-none py-1 text-center"
+                  >
                     {[0, 15, 30, 45].map((minute) => (
                       <option
                         key={minute}
-                        value={String(minute).padStart(2, "0")}>
+                        value={String(minute).padStart(2, "0")}
+                      >
                         {String(minute).padStart(2, "0")}
                       </option>
                     ))}
@@ -750,7 +765,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
                     name="endPeriod"
                     value={formData.endPeriod}
                     onChange={handleChange}
-                    className="bg-transparent outline-none py-1 text-gray-600 ml-1">
+                    className="bg-transparent outline-none py-1 text-gray-600 ml-1"
+                  >
                     <option>AM</option>
                     <option>PM</option>
                   </select>
@@ -773,7 +789,8 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
             value={formData.purpose}
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 h-32 resize-none focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-            required></textarea>
+            required
+          ></textarea>
         </div>
 
         {/* Action Buttons */}
@@ -782,13 +799,15 @@ const EditAppointmentForm = ({ initialData, onSave, onCancel, isSaving }) => {
             type="button"
             onClick={onCancel}
             disabled={isSaving} // Disable while saving
-            className="px-6 py-3 rounded-xl font-semibold text-lg hover:bg-gray-100 border border-gray-300 transition-all text-gray-700 disabled:opacity-50">
+            className="px-6 py-3 rounded-xl font-semibold text-lg hover:bg-gray-100 border border-gray-300 transition-all text-gray-700 disabled:opacity-50"
+          >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving} // Disable while saving
-            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-lg tracking-wide hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:bg-indigo-400 disabled:shadow-none flex items-center justify-center">
+            className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold text-lg tracking-wide hover:bg-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:bg-indigo-400 disabled:shadow-none flex items-center justify-center"
+          >
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -870,7 +889,7 @@ export default function App() {
     } catch (e) {
       console.error("Failed to fetch appointments:", e);
       setError(
-        "Failed to load appointments. Please check your network or token validity.",
+        "Failed to load appointments. Please check your network or token validity."
       );
     } finally {
       setLoading(false);
@@ -888,13 +907,7 @@ export default function App() {
     setIsModalOpen(true);
   }, []);
 
-  // Handler to open the Edit form
-  const handleEdit = useCallback((appointmentData) => {
-    const transformedData = prepareAppointmentForForm(appointmentData);
-    setEditingAppointment(transformedData);
-    setMode("edit");
-    setIsModalOpen(false);
-  }, []);
+  
 
   // Handler for when the Edit form is saved
   const handleSave = useCallback(async (updatedFormData) => {
@@ -924,21 +937,18 @@ export default function App() {
           },
           // We send the data in the final format required by the backend
           body: JSON.stringify(updatedData),
-        },
+        }
       );
 
       if (!response.ok) {
         // Catching the "Forbidden" (403) or any other API error here
         const errorText = await response.text();
         throw new Error(
-          `Update failed: ${response.statusText}. Server Response: ${errorText}`,
+          `Update failed: ${response.statusText}. Server Response: ${errorText}`
         );
       }
 
-      // 4. Update the appointment list in local state upon success
-      // NOTE: We should re-transform the successful backend response if possible,
-      // but since we only have the payload here, we use the payload structure.
-      // A better practice would be to call fetchAppointments() here for full refresh.
+      
       setAppointments((prev) =>
         prev.map((appt) => {
           if (appt.id === updatedData.id) {
@@ -962,7 +972,7 @@ export default function App() {
             return newClientAppt;
           }
           return appt;
-        }),
+        })
       );
 
       console.log("Update successful for appointment ID:", updatedData.id);
@@ -970,7 +980,7 @@ export default function App() {
       // 5. Handle any errors (including the 403 Forbidden)
       console.error("Saving failed: Error:", error.message);
       alert(
-        `Saving failed: ${error.message}. Please check permissions or network.`,
+        `Saving failed: ${error.message}. Please check permissions or network.`
       );
       // Do not change mode here if update failed. User should re-try or cancel.
       return;
@@ -984,10 +994,10 @@ export default function App() {
   }, []); // Dependencies are currently empty, assuming getAuthToken/setAppointments are stable
 
   // Handler for canceling the Edit form
-  const handleCancel = useCallback(() => {
-    setEditingAppointment(null);
-    setMode("list");
-  }, []);
+  // const handleCancel = useCallback(() => {
+  //   setEditingAppointment(null);
+  //   setMode("list");
+  // }, []);
 
   // Handler to close the View modal
   const handleCloseModal = useCallback(() => {
@@ -1008,7 +1018,7 @@ export default function App() {
     if (!token) {
       setLoading(false);
       setError(
-        "Authentication token not found. Please log in before deleting.",
+        "Authentication token not found. Please log in before deleting."
       );
       return;
     }
@@ -1022,7 +1032,7 @@ export default function App() {
             // Use the token retrieved from localStorage
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -1077,7 +1087,8 @@ export default function App() {
           <select
             className="border border-gray-300 rounded-lg px-4 py-2 w-full md:w-auto focus:ring-indigo-500 focus:border-indigo-500 transition duration-150"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}>
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
             <option value="">All Statuses</option>
             <option value="Approved">Approved</option>
             <option value="Pending">Pending</option>
@@ -1100,7 +1111,8 @@ export default function App() {
         {error && (
           <div
             className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-            role="alert">
+            role="alert"
+          >
             <strong className="font-bold">Error!</strong>
             <span className="block sm:inline ml-2">{error}</span>
           </div>
@@ -1118,28 +1130,25 @@ export default function App() {
               filteredAppointments.map((app) => (
                 <div
                   key={app.id}
-                  className="bg-white shadow-xl rounded-xl p-6 relative transition duration-300 hover:shadow-2xl">
+                  className="bg-white shadow-xl rounded-xl p-6 relative transition duration-300 hover:shadow-2xl"
+                >
                   {/* Action Icons */}
                   <div className="absolute top-4 right-4 flex gap-3 text-lg">
                     {/* VIEW BUTTON */}
                     <button
                       title="View Details"
                       onClick={() => handleView(app)}
-                      className="p-1 rounded-full hover:bg-blue-50 transition duration-150">
+                      className="p-1 rounded-full hover:bg-blue-50 transition duration-150"
+                    >
                       <Eye className="text-blue-500 hover:text-blue-600 w-5 h-5" />
                     </button>
-                    {/* EDIT BUTTON */}
-                    <button
-                      title="Edit"
-                      onClick={() => handleEdit(app)}
-                      className="p-1 rounded-full hover:bg-indigo-50 transition duration-150">
-                      <SquarePen className="text-indigo-600 hover:text-indigo-700 w-5 h-5" />
-                    </button>
+                   
                     {/* DELETE BUTTON */}
                     <button
                       title="Delete"
                       onClick={() => handleDelete(app.id)}
-                      className="p-1 rounded-full hover:bg-red-50 transition duration-150">
+                      className="p-1 rounded-full hover:bg-red-50 transition duration-150"
+                    >
                       <Trash2 className="text-red-500 hover:text-red-600 w-5 h-5" />
                     </button>
                   </div>
@@ -1154,7 +1163,8 @@ export default function App() {
                       className={`mt-1 inline-block px-3 py-1 text-xs font-semibold rounded-full capitalize ${
                         statusStyles[app.status] ||
                         statusStyles[app.status.toLowerCase()]
-                      }`}>
+                      }`}
+                    >
                       {app.status}
                     </span>
                   </div>
@@ -1208,25 +1218,5 @@ export default function App() {
     );
   }
 
-  // RENDER the Edit Appointment Form View
-  if (mode === "edit" && editingAppointment) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-start justify-center p-4 sm:p-8 font-sans w-full">
-        {error && (
-          <div
-            className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50 shadow-lg"
-            role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline ml-2">{error}</span>
-          </div>
-        )}
-        <EditAppointmentForm
-          initialData={editingAppointment}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          isSaving={saving} // Pass saving state to the form
-        />
-      </div>
-    );
-  }
+  
 }

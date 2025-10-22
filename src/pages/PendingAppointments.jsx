@@ -1010,8 +1010,8 @@ export default function PendingAppointmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50  sm:p-6 lg:p-2">
+      {/* <h1 className="text-2xl font-bold text-gray-900 mb-6">
         <Clock className="inline w-6 h-6 mr-2 text-blue-600" /> Pending
         Appointments
         <button
@@ -1024,7 +1024,7 @@ export default function PendingAppointmentsPage() {
             className={isListLoading ? "animate-spin" : ""}
           />
         </button>
-      </h1>
+      </h1> */}
 
       {fetchError && (
         <div className="p-4 mb-4 text-sm text-red-800 bg-red-100 rounded-lg flex items-center border border-red-200">
@@ -1034,12 +1034,12 @@ export default function PendingAppointmentsPage() {
       )}
 
       {isListLoading ? (
-        <div className="text-center p-10 text-gray-600 flex items-center justify-center bg-white rounded-xl shadow-lg">
+        <div className="text-center  text-gray-600 flex items-center justify-center bg-white rounded-xl shadow-lg">
           <Loader2 size={24} className="mr-2 animate-spin" /> Loading pending
           appointments...
         </div>
       ) : appointments.length === 0 ? (
-        <div className="text-center p-10 text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-white shadow-sm">
+        <div className="text-center p-1 text-gray-500 border-2 border-dashed border-gray-200 rounded-xl bg-white shadow-sm">
           <Info size={30} className="mx-auto text-gray-400 mb-3" />
           <p className="text-lg font-medium">No pending appointments found.</p>
         </div>
@@ -1048,22 +1048,22 @@ export default function PendingAppointmentsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-blue-50/50">
               <tr>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase w-1">
+                <th className="py-1 px-5 text-left text-xs font-bold text-gray-600 uppercase w-1">
                   No
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                <th className="py-1 px-4 text-left text-xs font-bold text-gray-600 uppercase">
                   Name
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase">
+                <th className="py-1 px-4 text-left text-xs font-bold text-gray-600 uppercase">
                   Email
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden md:table-cell">
+                <th className="py-1 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden md:table-cell">
                   Date
                 </th>
-                <th className="py-3 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden sm:table-cell">
+                <th className="py-1 px-4 text-left text-xs font-bold text-gray-600 uppercase hidden sm:table-cell">
                   Status
                 </th>
-                <th className="py-3 px-4 text-right text-xs font-bold text-gray-600 uppercase w-1">
+                <th className="py-1 px-4 text-right text-xs font-bold text-gray-600 uppercase w-1">
                   <Eye size={16} />
                 </th>
               </tr>

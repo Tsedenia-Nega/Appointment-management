@@ -18,6 +18,9 @@ import RolesPage from "./pages/RolesPage";
 import CreateAccount from "./pages/CreateAccount";
 import CheckInPage from "./pages/CheckInPage";
 import SecurityCheckPage from "./pages/SecurityCheckPage";
+import CEORegister from "./pages/CEORegister";
+import ForgotPassword from "./components/ForgotPassword";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
   return (
@@ -107,6 +110,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/register-ceo" element={<CEORegister />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
       </Routes>
     </Router>
   );
