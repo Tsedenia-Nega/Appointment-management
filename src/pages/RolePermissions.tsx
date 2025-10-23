@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import { PERMISSIONS } from "../permissions";
+import { BACKEND_URL } from "../config";
 
 interface RolePermissionsProps {
   roleName: string;
@@ -56,7 +57,7 @@ const RolePermissions: React.FC<RolePermissionsProps> = ({
     try {
       if (toGrant.length > 0) {
         const res = await fetch(
-          `http://localhost:3000/auth/roles/grant-multiple/${roleName}`,
+          `${BACKEND_URL}/auth/roles/grant-multiple/${roleName}`,
           {
             method: "POST",
             headers: {
@@ -71,7 +72,7 @@ const RolePermissions: React.FC<RolePermissionsProps> = ({
 
       if (itemsToRevoke.length > 0) {
         const res = await fetch(
-          `http://localhost:3000/auth/roles/revoke-multiple/${roleName}`,
+          `${BACKEND_URL}/auth/roles/revoke-multiple/${roleName}`,
           {
             method: "POST",
             headers: {

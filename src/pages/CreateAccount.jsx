@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../config";
 
-const API_BASE_URL = "http://localhost:3000";
-// const API_BASE_URL = import.meta.env.API_BASE_URL;
+
 
 const ACCESS_TOKEN_KEY = "token"; 
 
@@ -65,7 +65,7 @@ const CreateAccount = () => {
     const canonicalRoles = ["FRONT_DESK", "SECRETARY", "SECURITY"];
     setRolesError("");
 
-    const url = `${API_BASE_URL}/auth/roles`;
+    const url = `${BACKEND_URL}/auth/roles`;
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -181,7 +181,7 @@ const CreateAccount = () => {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+      const response = await fetch(`${BACKEND_URL}/auth/signup`, {
         method: "POST",
         headers: headers,
         body: JSON.stringify(payload),

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import axios from "axios";
+import { BACKEND_URL } from "../config";
 
-const BACKEND_URL = "http://localhost:3000";
 
 function Login() {
   const { setUser } = useAuth();
@@ -16,7 +16,7 @@ function Login() {
   useEffect(() => {
     const checkCeo = async () => {
       try {
-        const res = await axios.get(`${BACKEND_URL}/ceo-exists`);
+        const res = await axios.get(`${BACKEND_URL}/auth/ceo-exists`);
         setCeoExists(res.data.exists);
       } catch (err) {
         console.error("Error checking CEO:", err);

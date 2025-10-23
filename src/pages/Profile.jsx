@@ -4,21 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import TopNavbar from "../components/NavBar";
+import { BACKEND_URL } from "../config";
 
- const InputField = ({ label, value, type = "text", readOnly, onChange }) => (
-   <div className="flex flex-col space-y-1">
-     <label className="text-xs font-semibold text-gray-700">{label}</label>
-     <input
-       type={type}
-       value={value || ""}
-       readOnly={readOnly}
-       onChange={onChange}
-       className={`w-full p-2 border ${
-         readOnly ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300"
-       } rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors`}
-     />
-   </div>
- );
+const InputField = ({ label, value, type = "text", readOnly, onChange }) => (
+  <div className="flex flex-col space-y-1">
+    <label className="text-xs font-semibold text-gray-700">{label}</label>
+    <input
+      type={type}
+      value={value || ""}
+      readOnly={readOnly}
+      onChange={onChange}
+      className={`w-full p-2 border ${
+        readOnly ? "bg-gray-50 border-gray-200" : "bg-white border-gray-300"
+      } rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition-colors`}
+    />
+  </div>
+);
 const Profile = () => {
   // 1. Initialize useNavigate hook
   const navigate = useNavigate();
@@ -30,7 +31,6 @@ const Profile = () => {
 
   // Function to handle back navigation
   const handleBack = () => {
-    
     navigate(-1);
   };
 
@@ -41,8 +41,7 @@ const Profile = () => {
     }
 
     try {
-   
-      const res = await fetch("http://localhost:3000/users", {
+      const res = await fetch(`${BACKEND_URL}/users`, {
         headers: { Authorization: `Bearer ${user.access_token}` },
       });
       const data = await res.json();
@@ -62,7 +61,7 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       // It's crucial to send the ID if the backend doesn't infer it from the token
-      const res = await fetch("http://localhost:3000/users/profile", {
+      const res = await fetch(`${BACKEND_URL}/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -80,8 +79,6 @@ const Profile = () => {
       console.error(err);
     }
   };
-
- 
 
   if (loading) {
     // Render TopNavbar even while loading for consistent UI
@@ -101,11 +98,11 @@ const Profile = () => {
       </>
     );
   }
-    const avatarUrl =
-      user.photo ||
-      `https://placehold.co/100x100/3B82F6/ffffff?text=${
-        userData.firstName?.[0] || "U"
-      }${userData.middleName?.[0] || "?"}`;
+  const avatarUrl =
+    user.photo ||
+    `https://placehold.co/100x100/3B82F6/ffffff?text=${
+      userData.firstName?.[0] || "U"
+    }${userData.middleName?.[0] || "?"}`;
 
   return (
     // 3. Main container for the Profile page content

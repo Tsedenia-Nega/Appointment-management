@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { Loader2, Mail } from "lucide-react";
-
+import { BACKEND_URL } from "../config";
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     setError("");
     try {
       const res = await axios.post(
-        "http://localhost:3000/auth/forgot-password",
+        `${BACKEND_URL}/auth/forgot-password`,
         { email }
       );
       setMsg(res.data.message);

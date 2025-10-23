@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../config";
 // Icons for visual appeal
 import {
   FiCalendar,
@@ -205,7 +206,7 @@ export default function AppointmentForm() {
       setMessageType("");
 
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:3000/requests", {
+      const res = await fetch(`${BACKEND_URL}/requests`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

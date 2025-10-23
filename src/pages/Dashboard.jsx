@@ -10,6 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { useAuth } from "../context/useAuth";
+import { BACKEND_URL } from "../config";
 
 ChartJS.register(
   CategoryScale,
@@ -36,7 +37,7 @@ export default function Dashboard() {
 
     const fetchDashboard = async () => {
       try {
-        const res = await fetch("http://localhost:3000/requests/dashboard", {
+        const res = await fetch(`${BACKEND_URL}/requests/dashboard`, {
           headers: { Authorization: `Bearer ${user.access_token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch dashboard data");
@@ -213,7 +214,6 @@ export default function Dashboard() {
             <div className="p-6 h-80 bg-white">
               <Bar data={chartData} options={chartOptions} />
             </div>
-            
           </div>
         </div>
       </div>

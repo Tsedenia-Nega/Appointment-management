@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/useAuth";
 import RolePermissions from "./RolePermissions";
+import { BACKEND_URL } from "../config";
 
 interface Role {
   id: string;
@@ -19,7 +20,7 @@ const RolesPage: React.FC = () => {
 
     const fetchRoles = async () => {
       try {
-        const res = await fetch("http://localhost:3000/roles", {
+        const res = await fetch(`${BACKEND_URL}/roles`, {
           headers: { Authorization: `Bearer ${user.access_token}` },
         });
 
@@ -57,7 +58,8 @@ const RolesPage: React.FC = () => {
           .map((role) => (
             <div
               key={role.id}
-              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300">
+              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow duration-300"
+            >
               <RolePermissions
                 roleName={role.name}
                 initialPermissions={role.permissions.map((p) => p.key)}

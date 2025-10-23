@@ -11,9 +11,10 @@ import {
   Search,
   Calendar,
 } from "lucide-react";
+import { BACKEND_URL } from "../config";
 
 // --- Configuration ---
-const BASE_URL = "http://localhost:3000";
+
 const ACCESS_TOKEN_KEY = "token";
 
 // --- Helper Functions ---
@@ -171,7 +172,7 @@ export default function SecurityCheckPage() {
 
   const fetchCheckInOutStatus = async (requestId) => {
     try {
-      const res = await fetch(`${BASE_URL}/checkinout/${requestId}`, {
+      const res = await fetch(`${BACKEND_URL}/checkinout/${requestId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok)
@@ -199,10 +200,10 @@ export default function SecurityCheckPage() {
 
     try {
       const [approvedRes, reassignedRes] = await Promise.all([
-        fetch(`${BASE_URL}/requests/approved`, {
+        fetch(`${BACKEND_URL}/requests/approved`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${BASE_URL}/requests/reassigned`, {
+        fetch(`${BACKEND_URL}/requests/reassigned`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -264,11 +265,11 @@ export default function SecurityCheckPage() {
       statusField,
       apiBody = {};
     if (actionType === "security-pass") {
-      apiEndpoint = `${BASE_URL}/checkinout/${apptId}/security-pass`;
+      apiEndpoint = `${BACKEND_URL}/checkinout/${apptId}/security-pass`;
       statusField = "securityPassed";
       apiBody = { securityPassed: true };
     } else if (actionType === "checkout") {
-      apiEndpoint = `${BASE_URL}/checkinout/${apptId}/checkout`;
+      apiEndpoint = `${BACKEND_URL}/checkinout/${apptId}/checkout`;
       statusField = "checkedOut";
       apiBody = { checkedOut: true };
     } else {

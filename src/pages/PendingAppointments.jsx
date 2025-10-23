@@ -22,9 +22,9 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-
+import { BACKEND_URL } from "../config";
 // Base URL and token
-const BASE_URL = "http://localhost:3000";
+
 const ACCESS_TOKEN_KEY = "token";
 
 // Allowed materials options (fixed, default list)
@@ -551,7 +551,7 @@ export default function PendingAppointmentsPage() {
     setIsListLoading(true);
     setFetchError(null);
     try {
-      const res = await fetch(`${BASE_URL}/requests/pending`, {
+      const res = await fetch(`${BACKEND_URL}/requests/pending`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {

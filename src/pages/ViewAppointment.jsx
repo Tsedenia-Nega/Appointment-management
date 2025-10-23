@@ -8,12 +8,14 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
-const BACKEND_URL = "http://localhost:3000/requests";
-const ALL_APPOINTMENTS_ENDPOINT = `${BACKEND_URL}/all`;
-const UPDATE_APPOINTMENT_ENDPOINT = `${BACKEND_URL}`;
-const DELETE_APPOINTMENT_ENDPOINT = `${BACKEND_URL}`;
+import { BACKEND_URL } from "../config";
+
+const REQUEST_URL = `${BACKEND_URL}/requests`;
+const ALL_APPOINTMENTS_ENDPOINT = `${REQUEST_URL}/all`;
+const UPDATE_APPOINTMENT_ENDPOINT = `${REQUEST_URL}`;
+const DELETE_APPOINTMENT_ENDPOINT = `${REQUEST_URL}`;
 // NEW: Endpoint for Check-in/out status
-const CHECKINOUT_ENDPOINT = "http://localhost:3000/checkinout";
+const CHECKINOUT_ENDPOINT = `${BACKEND_URL}/checkinout`;
 
 const INITIAL_MOCK_APPOINTMENTS = [];
 
@@ -104,27 +106,16 @@ const transformBackendToClient = (backendAppt) => {
       backendAppt.status.charAt(0).toUpperCase() + backendAppt.status.slice(1), // Capitalize first letter for display
     purpose: backendAppt.purpose,
     plateNum: backendAppt.plateNum || "", // If null, default to blank string ""
-    // REMOVED: checkInPosition: backendAppt.checkInPosition || "",
-    // REMOVED: checkOutPosition: backendAppt.checkOutPosition || "",
-    // originalTimeFrom/To fields removed as they are redundant when 'time' field is used for form pre-population
-    // originalTimeFrom: backendAppt.timeFrom,
-    // originalTimeTo: backendAppt.timeTo,
-    // Store customer ID for full update payload
+   
     customerId: backendAppt.customer.id,
   };
 };
 
-// Helper to transform the combined 'time' string into separate fields for the form
-// This function needs to handle the client-side model (which has a combined 'time' field)
 const prepareAppointmentForForm = (appt) => {
-  // Use the time parts from the client-side model's 'time' (e.g., "04:20 PM - 06:00 PM")
-  const [startTimeStr, endTimeStr] = appt.time.split(" - ");
 
-  // Start Time: "04:20 PM" -> ["04:20", "PM"]
+  const [startTimeStr, endTimeStr] = appt.time.split(" - ");
   const [startTime, startPeriod] = startTimeStr.split(" ");
   const [startHour, startMinute] = startTime.split(":");
-
-  // End Time: "06:00 PM" -> ["06:00", "PM"]
   const [endTime, endPeriod] = endTimeStr.split(" ");
   const [endHour, endMinute] = endTime.split(":");
 
@@ -136,8 +127,7 @@ const prepareAppointmentForForm = (appt) => {
     endHour: endHour,
     endMinute: endMinute,
     endPeriod: endPeriod,
-    // Add a temporary state to track if the date/time fields have been modified for status 'Rescheduled'
-    // For simplicity, we assume if the form is edited, it's a new proposed time.
+   
   };
 };
 
@@ -200,13 +190,11 @@ const prepareFormForSave = (formData) => {
       organization: formData.organization,
       occupation: formData.occupation,
     },
-    // NOTE: checkInPosition and checkOutPosition are not included here as they are typically captured separately at the time of the event, not via the edit form.
+    
   };
 
   return requestBody;
 };
-
-// --- START: ViewAppointmentModal Component (Minor updates for time, plateNum, and new positions) ---
 
 // Simple Close Icon
 const CloseIcon = () => (

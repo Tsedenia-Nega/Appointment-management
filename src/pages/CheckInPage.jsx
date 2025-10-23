@@ -10,8 +10,8 @@ import {
   Search,
   Calendar,
 } from "lucide-react";
+import { BACKEND_URL } from "../config";
 
-const BASE_URL = "http://localhost:3000";
 const ACCESS_TOKEN_KEY = "token";
 
 const formatTime = (timeString) => {
@@ -144,7 +144,7 @@ export default function SecretaryCheckInPage() {
 
   const fetchCheckInOutStatus = async (requestId) => {
     try {
-      const res = await fetch(`${BASE_URL}/checkinout/${requestId}`, {
+      const res = await fetch(`${BACKEND_URL}/checkinout/${requestId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok)
@@ -171,10 +171,10 @@ export default function SecretaryCheckInPage() {
 
     try {
       const [approvedRes, reassignedRes] = await Promise.all([
-        fetch(`${BASE_URL}/requests/approved`, {
+        fetch(`${BACKEND_URL}/requests/approved`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`${BASE_URL}/requests/reassigned`, {
+        fetch(`${BACKEND_URL}/requests/reassigned`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -217,7 +217,7 @@ export default function SecretaryCheckInPage() {
     if (currentStatus || actionLoading) return;
     setActionLoading(apptId);
     try {
-      await fetch(`${BASE_URL}/checkinout/${apptId}/checkin`, {
+      await fetch(`${BACKEND_URL}/checkinout/${apptId}/checkin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

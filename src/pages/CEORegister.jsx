@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { BACKEND_URL } from "../config";
 
-const BACKEND_URL = "http://localhost:3000/auth";
 
 const CEORegister = () => {
   const [formData, setFormData] = useState({
@@ -29,7 +29,7 @@ const CEORegister = () => {
     setError(null);
 
     try {
-      const res = await axios.post(`${BACKEND_URL}/register-ceo`, formData);
+      const res = await axios.post(`${BACKEND_URL}/auth/register-ceo`, formData);
       setMessage("CEO registered successfully!");
       setFormData({
         firstName: "",
@@ -87,7 +87,7 @@ const CEORegister = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
-                className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-white"
+                className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
                 placeholder="First Name"
               />
               <label className="absolute left-4 top-3 text-gray-200 text-sm transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-300 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-blue-400 peer-focus:text-sm">
@@ -101,7 +101,7 @@ const CEORegister = () => {
                 name="middleName"
                 value={formData.middleName}
                 onChange={handleChange}
-                className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-white"
+                className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
                 placeholder="Middle Name"
               />
               <label className="absolute left-4 top-3 text-gray-200 text-sm transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-300 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-blue-400 peer-focus:text-sm">
@@ -117,7 +117,7 @@ const CEORegister = () => {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-white"
+              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
               placeholder="Last Name"
             />
             <label className="absolute left-4 top-3 text-gray-200 text-sm transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-300 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-blue-400 peer-focus:text-sm">
@@ -132,7 +132,7 @@ const CEORegister = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-white"
+              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
               placeholder="Email"
             />
             <label className="absolute left-4 top-3 text-gray-200 text-sm transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-300 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-blue-400 peer-focus:text-sm">
@@ -147,7 +147,7 @@ const CEORegister = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-white"
+              className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
               placeholder="Password"
             />
             <label className="absolute left-4 top-3 text-gray-200 text-sm transition-all peer-placeholder-shown:top-3 peer-placeholder-shown:text-gray-300 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-blue-400 peer-focus:text-sm">

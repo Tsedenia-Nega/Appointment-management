@@ -13,6 +13,7 @@ import {
   ChevronDown,
   LogOut,
   Menu,
+  User,
   X,
 } from "lucide-react";
 import logo from "../assets/logo.jpg";
@@ -223,7 +224,7 @@ export default function SingleNavbar() {
                 }}
                 className="flex items-center gap-2 px-4 py-2 w-full text-left text-gray-800 hover:bg-blue-50 text-sm md:text-base rounded-md"
               >
-                Profile
+                <User size={16} /> Profile
               </button>
               <button
                 onClick={logout}
@@ -356,7 +357,7 @@ export default function SingleNavbar() {
               onClick={() => navigate("/profile")}
               className="flex items-center gap-2 px-4 py-2 text-gray-800 rounded-lg hover:bg-blue-50 transition-all duration-300"
             >
-              Profile
+              <User size={16} /> Profile
             </button>
             <button
               onClick={logout}

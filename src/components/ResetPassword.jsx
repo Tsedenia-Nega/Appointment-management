@@ -8,7 +8,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"; // Added Eye/EyeOff for password visibility
-
+import { BACKEND_URL } from "../config";
 const ResetPassword = () => {
   const { token } = useParams(); // <-- get token from URL
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const ResetPassword = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/auth/reset-password/${token}`,
+        `${BACKEND_URL}/auth/reset-password/${token}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
