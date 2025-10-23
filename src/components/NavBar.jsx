@@ -16,7 +16,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import logo from "../assets/logo.jpg";
+import logo from "../assets/logo.png";
 
 export default function SingleNavbar() {
   const { user, logout } = useAuth();
