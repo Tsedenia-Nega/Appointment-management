@@ -51,18 +51,22 @@ const CEORegister = () => {
   };
 
   return (
+    // <div
+    //   className="min-h-screen flex items-center justify-center bg-cover bg-center p-6"
+    //   style={{
+    //     backgroundImage: "url('/images/bg.jpeg')",
+    //   }}
+    // >
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center p-6"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1740&q=80')",
-      }}
+      className="relative flex items-center justify-center min-h-screen bg-cover bg-center text-white"
+      style={{ backgroundImage: "url('/images/bg.jpeg')" }}
     >
-      {/* Overlay for soft focus */}
-      <div className="absolute inset-0 bg-white/20"></div>
+      
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
 
       {/* Form Card */}
-      <div className="relative max-w-lg w-full bg-white/30 backdrop-blur-lg shadow-2xl rounded-3xl p-10 border border-white/40 z-10">
+      <div className="relative max-w-md w-full p-8 space-y-6 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 z-10 transform transition-all duration-300 hover:scale-[1.01]">
         <h2 className="text-3xl font-extrabold text-center text-blue-600 mb-8">
           Register CEO
         </h2>
