@@ -1,8 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from "../config";
-
 
 const CEORegister = () => {
   const [formData, setFormData] = useState({
@@ -29,7 +27,18 @@ const CEORegister = () => {
     setError(null);
 
     try {
-      const res = await axios.post(`${BACKEND_URL}/auth/register-ceo`, formData);
+      const res = await fetch(`${BACKEND_URL}/auth/register-ceo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong. Try again.");
+      }
+
       setMessage("CEO registered successfully!");
       setFormData({
         firstName: "",
@@ -38,30 +47,21 @@ const CEORegister = () => {
         email: "",
         password: "",
       });
+
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Something went wrong. Try again."
-      );
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // <div
-    //   className="min-h-screen flex items-center justify-center bg-cover bg-center p-6"
-    //   style={{
-    //     backgroundImage: "url('/images/bg.jpeg')",
-    //   }}
-    // >
     <div
       className="relative flex items-center justify-center min-h-screen bg-cover bg-center text-white"
-      style={{ backgroundImage: "url('/images/bg.jpeg')" }}
-    >
-      
+      style={{ backgroundImage: "url('/images/bg.jpeg')" }}>
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
 
@@ -77,7 +77,7 @@ const CEORegister = () => {
           </p>
         )}
         {error && (
-          <p className="bg-red-100/80 text-red-700  rounded-sm mb-4 text-center font-medium backdrop-blur-sm">
+          <p className="bg-red-100/80 text-red-700 rounded-sm mb-4 text-center font-medium backdrop-blur-sm">
             {error}
           </p>
         )}
@@ -151,6 +151,7 @@ const CEORegister = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              autoComplete="new-password"
               className="peer w-full border border-blue-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition shadow-sm placeholder-transparent bg-white/30 backdrop-blur-sm text-black"
               placeholder="Password"
             />
@@ -162,8 +163,7 @@ const CEORegister = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-400 to-blue-500 text-white font-semibold py-3 rounded-2xl hover:from-blue-400 hover:to-blue-600 shadow-lg transition-all transform hover:-translate-y-0.5 hover:scale-105"
-          >
+            className="w-full bg-gradient-to-r from-blue-400 to-blue-500 text-white font-semibold py-3 rounded-2xl hover:from-blue-400 hover:to-blue-600 shadow-lg transition-all transform hover:-translate-y-0.5 hover:scale-105">
             {loading ? "Registering..." : "Register"}
           </button>
         </form>

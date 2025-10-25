@@ -23,7 +23,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { BACKEND_URL } from "../config";
-// Base URL and token
 
 const ACCESS_TOKEN_KEY = "token";
 
@@ -79,21 +78,19 @@ const Toast = ({ message, type, onClose }) => {
   return (
     <div
       className={`fixed top-4 right-4 z-[100] p-4 pr-10 rounded-lg shadow-xl border-l-4 transition-all duration-300 ${getColorClass(
-        type
+        type,
       )}`}
       style={{
         transform: message ? "translateX(0)" : "translateX(120%)",
         opacity: message ? 1 : 0,
-      }}
-    >
+      }}>
       <div className="flex items-center space-x-3">
         {getIcon(type)}
         <p className="text-sm font-medium text-gray-800">{message}</p>
       </div>
       <button
         onClick={onClose}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-      >
+        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
         <X size={16} />
       </button>
     </div>
@@ -152,7 +149,7 @@ const ReassignModal = ({
     const material = e.target.value;
     const isChecked = e.target.checked;
     setAllowedMaterials((prev) =>
-      isChecked ? [...prev, material] : prev.filter((m) => m !== material)
+      isChecked ? [...prev, material] : prev.filter((m) => m !== material),
     );
   };
 
@@ -185,12 +182,10 @@ const ReassignModal = ({
   return (
     <div
       className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 transition-opacity"
-      onClick={onClose}
-    >
+      onClick={onClose}>
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-center border-b pb-3 mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center">
@@ -199,8 +194,7 @@ const ReassignModal = ({
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100"
-            >
+              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
               <X size={20} />
             </button>
           </div>
@@ -209,8 +203,7 @@ const ReassignModal = ({
               <div>
                 <label
                   htmlFor="date"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
+                  className="block text-sm font-medium text-gray-700 mb-1">
                   New Date *
                 </label>
                 <input
@@ -226,8 +219,7 @@ const ReassignModal = ({
                 <div className="flex-1">
                   <label
                     htmlFor="timeFrom"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
+                    className="block text-sm font-medium text-gray-700 mb-1">
                     Time From *
                   </label>
                   <input
@@ -242,8 +234,7 @@ const ReassignModal = ({
                 <div className="flex-1">
                   <label
                     htmlFor="timeTo"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
+                    className="block text-sm font-medium text-gray-700 mb-1">
                     Time To *
                   </label>
                   <input
@@ -275,8 +266,7 @@ const ReassignModal = ({
                     />
                     <label
                       htmlFor={`modal-material-${opt}`}
-                      className="text-sm text-gray-700 select-none"
-                    >
+                      className="text-sm text-gray-700 select-none">
                       {opt}
                     </label>
                   </div>
@@ -305,8 +295,7 @@ const ReassignModal = ({
                     />
                     <label
                       htmlFor={`modal-security-${status}`}
-                      className="text-sm text-gray-700 select-none"
-                    >
+                      className="text-sm text-gray-700 select-none">
                       {status}
                     </label>
                   </div>
@@ -319,15 +308,13 @@ const ReassignModal = ({
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 Cancel
               </button>
               <button
                 type="submit"
                 className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 transition shadow-md disabled:opacity-50"
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 size={16} className="mr-2 animate-spin" />{" "}
@@ -373,12 +360,10 @@ const RejectionPromptModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
   return (
     <div
       className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 transition-opacity"
-      onClick={onClose}
-    >
+      onClick={onClose}>
       <div
         className="bg-white rounded-xl shadow-2xl w-full max-w-sm"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <div className="p-6">
           <div className="flex justify-between items-center border-b pb-3 mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center">
@@ -386,8 +371,7 @@ const RejectionPromptModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100"
-            >
+              className="text-gray-400 hover:text-gray-600 p-1 transition rounded-full hover:bg-gray-100">
               <X size={20} />
             </button>
           </div>
@@ -411,15 +395,13 @@ const RejectionPromptModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
                 type="button"
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition shadow-sm"
-                disabled={isLoading}
-              >
+                disabled={isLoading}>
                 Cancel
               </button>
               <button
                 type="submit"
                 className="flex items-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-md disabled:opacity-50"
-                disabled={isLoading || reason.trim() === ""}
-              >
+                disabled={isLoading || reason.trim() === ""}>
                 {isLoading ? (
                   <>
                     <Loader2 size={16} className="mr-2 animate-spin" />{" "}
@@ -461,7 +443,7 @@ const CustomMaterialInput = ({
 
       // Check if the normalized material already exists in the current list
       const isDuplicate = currentMaterials.some(
-        (m) => normalizeMaterial(m) === normalizedMaterial
+        (m) => normalizeMaterial(m) === normalizedMaterial,
       );
       if (isDuplicate) {
         showToast(`"${material}" (or similar) is already listed.`, "info");
@@ -474,7 +456,7 @@ const CustomMaterialInput = ({
       updateMaterials(newMaterials);
       setCustomMaterialText(""); // Clear on successful add
     },
-    [customMaterialText, currentMaterials, showToast, updateMaterials]
+    [customMaterialText, currentMaterials, showToast, updateMaterials],
   );
 
   return (
@@ -493,8 +475,7 @@ const CustomMaterialInput = ({
         <button
           type="submit"
           className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold text-sm disabled:opacity-50 flex-shrink-0"
-          disabled={!customMaterialText.trim()}
-        >
+          disabled={!customMaterialText.trim()}>
           <Plus size={16} className="sm:mr-1" />{" "}
           <span className="hidden sm:inline">Add</span>
         </button>
@@ -524,7 +505,7 @@ export default function PendingAppointmentsPage() {
 
   const token = useMemo(() => localStorage.getItem(ACCESS_TOKEN_KEY), []);
   const selectedAppointment = appointments.find(
-    (appt) => appt.id === expandedId
+    (appt) => appt.id === expandedId,
   );
 
   // Helper to update the approval configuration for a specific appointment ID
@@ -571,7 +552,7 @@ export default function PendingAppointmentsPage() {
       console.error(err);
       setFetchError(
         err.message ||
-          "An unexpected error occurred while fetching appointments."
+          "An unexpected error occurred while fetching appointments.",
       );
       showToast("Failed to load appointments.", "error");
     } finally {
@@ -606,7 +587,7 @@ export default function PendingAppointmentsPage() {
     if (config.materials.length === 0 && config.inspection === "Not Required") {
       showToast(
         "Please configure allowed materials and inspection status before approving.",
-        "info"
+        "info",
       );
       return;
     }
@@ -614,7 +595,7 @@ export default function PendingAppointmentsPage() {
     // Custom confirmation UI logic (using native confirm as it's the expected interaction pattern for this environment)
     if (
       !window.confirm(
-        `Are you sure you want to APPROVE this appointment with the selected settings?`
+        `Are you sure you want to APPROVE this appointment with the selected settings?`,
       )
     )
       return;
@@ -635,7 +616,7 @@ export default function PendingAppointmentsPage() {
     // ----------------------------
 
     try {
-      const res = await fetch(`${BASE_URL}/approvals/${appt.id}/approve`, {
+      const res = await fetch(`${BACKEND_URL}/approvals/${appt.id}/approve`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -652,7 +633,7 @@ export default function PendingAppointmentsPage() {
       console.error("Approval error:", err);
       showToast(
         `Error approving appointment: ${err.message || "Check console."}`,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(null);
@@ -668,7 +649,7 @@ export default function PendingAppointmentsPage() {
     setCurrentApptToRejectId(null);
 
     try {
-      const res = await fetch(`${BASE_URL}/approvals/${apptId}/reject`, {
+      const res = await fetch(`${BACKEND_URL}/approvals/${apptId}/reject`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -691,7 +672,7 @@ export default function PendingAppointmentsPage() {
       console.error("Rejection error:", err);
       showToast(
         `Error rejecting appointment: ${err.message || "Check console."}`,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(null);
@@ -705,7 +686,7 @@ export default function PendingAppointmentsPage() {
     // Custom confirmation
     if (
       !window.confirm(
-        `Confirm reassigning appointment to ${reassignData.reassignedDate}?`
+        `Confirm reassigning appointment to ${reassignData.reassignedDate}?`,
       )
     ) {
       setActionLoading(null);
@@ -714,7 +695,7 @@ export default function PendingAppointmentsPage() {
 
     try {
       const res = await fetch(
-        `${BASE_URL}/approvals/${selectedAppointment.id}/reassign`,
+        `${BACKEND_URL}/approvals/${selectedAppointment.id}/reassign`,
         {
           method: "POST",
           headers: {
@@ -722,7 +703,7 @@ export default function PendingAppointmentsPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(reassignData),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to reassign appointment.");
 
@@ -734,7 +715,7 @@ export default function PendingAppointmentsPage() {
       console.error("Reassign error:", err);
       showToast(
         `Error reassigning appointment: ${err.message || "Check console."}`,
-        "error"
+        "error",
       );
     } finally {
       setActionLoading(null);
@@ -758,7 +739,7 @@ export default function PendingAppointmentsPage() {
     // Use a memoized set of normalized allowed options for efficient comparison
     const normalizedAllowedOptions = useMemo(
       () => new Set(allowedOptions.map(normalizeMaterial)),
-      []
+      [],
     );
 
     // Handler passed to the custom input component to update the main state
@@ -766,7 +747,7 @@ export default function PendingAppointmentsPage() {
       (newMaterials) => {
         updateApprovalConfig(appt.id, "materials", newMaterials);
       },
-      [appt.id, updateApprovalConfig]
+      [appt.id, updateApprovalConfig],
     );
 
     /**
@@ -783,7 +764,7 @@ export default function PendingAppointmentsPage() {
           [...currentMaterials, material]
         : // Remove the material, checking by normalized name
           currentMaterials.filter(
-            (m) => normalizeMaterial(m) !== normalizedMaterial
+            (m) => normalizeMaterial(m) !== normalizedMaterial,
           );
 
       updateMaterialsInConfig(newMaterials);
@@ -796,21 +777,20 @@ export default function PendingAppointmentsPage() {
       const normalizedMaterialToRemove = normalizeMaterial(materialToRemove);
 
       const newMaterials = currentMaterials.filter(
-        (m) => normalizeMaterial(m) !== normalizedMaterialToRemove
+        (m) => normalizeMaterial(m) !== normalizedMaterialToRemove,
       );
       updateMaterialsInConfig(newMaterials);
     };
 
     // Filter out fixed options to only show custom added ones as chips
     const customMaterials = currentMaterials.filter(
-      (m) => !normalizedAllowedOptions.has(normalizeMaterial(m))
+      (m) => !normalizedAllowedOptions.has(normalizeMaterial(m)),
     );
 
     return (
       <td
         colSpan="6"
-        className="p-4 sm:p-6 bg-gray-50 border-t border-gray-200 shadow-inner"
-      >
+        className="p-4 sm:p-6 bg-gray-50 border-t border-gray-200 shadow-inner">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Appointment/Customer Details */}
           <div className="flex-1 space-y-4 lg:pr-6 lg:border-r border-gray-200">
@@ -889,15 +869,14 @@ export default function PendingAppointmentsPage() {
                       value={opt}
                       // Use normalized comparison for checked status
                       checked={currentMaterials.some(
-                        (m) => normalizeMaterial(m) === normalizeMaterial(opt)
+                        (m) => normalizeMaterial(m) === normalizeMaterial(opt),
                       )}
                       onChange={handleMaterialChange}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
                     <label
                       htmlFor={`material-${appt.id}-${opt}`}
-                      className="text-sm text-gray-700 select-none"
-                    >
+                      className="text-sm text-gray-700 select-none">
                       {opt}
                     </label>
                   </div>
@@ -924,8 +903,7 @@ export default function PendingAppointmentsPage() {
                       key={material}
                       className="inline-flex items-center px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded-full cursor-pointer hover:bg-purple-200 transition"
                       onClick={() => handleRemoveCustomMaterial(material)}
-                      title="Click to remove"
-                    >
+                      title="Click to remove">
                       {material}
                       <Trash2 size={12} className="ml-1 text-purple-600" />
                     </span>
@@ -952,15 +930,14 @@ export default function PendingAppointmentsPage() {
                         updateApprovalConfig(
                           appt.id,
                           "inspection",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                     />
                     <label
                       htmlFor={`security-${appt.id}-${status}`}
-                      className="text-sm text-gray-700 select-none"
-                    >
+                      className="text-sm text-gray-700 select-none">
                       {status}
                     </label>
                   </div>
@@ -973,8 +950,7 @@ export default function PendingAppointmentsPage() {
               <button
                 onClick={() => handleApprove(appt)}
                 disabled={actionLoading === appt.id}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
-              >
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center">
                 {actionLoading === appt.id ? (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 ) : (
@@ -986,8 +962,7 @@ export default function PendingAppointmentsPage() {
                 // Opens the Rejection Prompt Modal
                 onClick={() => openRejectPrompt(appt.id)}
                 disabled={actionLoading === appt.id}
-                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
-              >
+                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center">
                 {actionLoading === appt.id ? (
                   <Loader2 size={16} className="mr-2 animate-spin" />
                 ) : (
@@ -998,8 +973,7 @@ export default function PendingAppointmentsPage() {
               <button
                 onClick={() => setIsReassignModalOpen(true)}
                 disabled={actionLoading !== null} // Disable all actions if one is pending
-                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center"
-              >
+                className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-semibold shadow-md disabled:opacity-50 text-sm w-full sm:w-auto justify-center">
                 <RotateCcw size={16} className="mr-2" /> Reassign
               </button>
             </div>
@@ -1073,8 +1047,7 @@ export default function PendingAppointmentsPage() {
                 <React.Fragment key={appt.id}>
                   <tr
                     className="hover:bg-gray-50 cursor-pointer transition duration-150"
-                    onClick={() => handleToggleExpand(appt.id)}
-                  >
+                    onClick={() => handleToggleExpand(appt.id)}>
                     <td className="py-3 px-4 text-sm font-medium text-gray-500 whitespace-nowrap">
                       {index + 1}
                     </td>
@@ -1100,8 +1073,7 @@ export default function PendingAppointmentsPage() {
                           expandedId === appt.id
                             ? "Collapse Details"
                             : "Expand Details"
-                        }
-                      >
+                        }>
                         {expandedId === appt.id ? (
                           <ChevronUp size={18} />
                         ) : (
